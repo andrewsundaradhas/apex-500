@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Build output
+dist/
+build/
+.vite/
+
+# Data / runtime
+backend/data/*.db
+backend/data/*.db-journal
+backend/models_cache/*.pkl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Logs / env
+*.log
+.env
+.env.local
