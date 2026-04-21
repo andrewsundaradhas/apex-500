@@ -94,17 +94,7 @@ Visit http://localhost:8000/docs for interactive API docs.
 npm run dev
 ```
 
-Opens http://localhost:5173.
 
-### 4. (Optional) Run smoke tests
-
-```bash
-cd backend
-python3 tests/test_smoke.py
-# → 22/22 passed
-```
-
----
 
 ## API cheat sheet
 
@@ -260,9 +250,7 @@ Every dataset is free and needs no API key:
 - **FRED (St. Louis Fed)** — the gold standard for US macro. The CSV endpoint we use is public and doesn't need registration.
 - **yfinance news** — free headlines with publish timestamps per ticker.
 
-In sandboxed environments (no outbound network), the app silently falls back to procedurally-generated but deterministic mock data, so the UI always has something to render.
 
----
 
 ## Demo credentials
 
