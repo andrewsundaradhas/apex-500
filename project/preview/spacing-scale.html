@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .token { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); width: 60px; flex-shrink: 0; text-align: right; }
+  .bar { height: 14px; background: var(--accent-soft); border-radius: 3px; border: 1px solid var(--accent-primary); }
+  .px { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); width: 40px; }
+  .use { font-size: 12px; color: var(--fg-tertiary); margin-left: auto; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="row"><span class="token">sp-1</span><span class="bar" style="width:4px"></span><span class="px">4px</span><span class="use">Tight inline gaps</span></div>
+    <div class="row"><span class="token">sp-2</span><span class="bar" style="width:8px"></span><span class="px">8px</span><span class="use">Icon + label</span></div>
+    <div class="row"><span class="token">sp-3</span><span class="bar" style="width:12px"></span><span class="px">12px</span><span class="use">Button padding-x</span></div>
+    <div class="row"><span class="token">sp-4</span><span class="bar" style="width:16px"></span><span class="px">16px</span><span class="use">Stack gap default</span></div>
+    <div class="row"><span class="token">sp-5</span><span class="bar" style="width:20px"></span><span class="px">20px</span><span class="use">Card padding</span></div>
+    <div class="row"><span class="token">sp-6</span><span class="bar" style="width:24px"></span><span class="px">24px</span><span class="use">Card padding large</span></div>
+    <div class="row"><span class="token">sp-8</span><span class="bar" style="width:32px"></span><span class="px">32px</span><span class="use">Section gap</span></div>
+    <div class="row"><span class="token">sp-12</span><span class="bar" style="width:48px"></span><span class="px">48px</span><span class="use">Page gutters</span></div>
+  </div>
+</body>
+</html>

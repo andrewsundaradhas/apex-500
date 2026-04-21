@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+  .head { display: flex; align-items: center; justify-content: space-between; }
+  .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--fg-tertiary); font-weight: 500; }
+  .val { font-family: var(--font-mono); font-size: 13px; color: var(--fg-primary); font-variant-numeric: tabular-nums; }
+  .slider { position: relative; height: 24px; }
+  .track { position: absolute; top: 50%; left: 0; right: 0; height: 4px; transform: translateY(-50%); background: var(--border-default); border-radius: 2px; }
+  .fill { position: absolute; top: 50%; left: 50%; height: 4px; transform: translateY(-50%); background: var(--accent-primary); width: 16%; border-radius: 2px; box-shadow: 0 0 8px rgba(139, 92, 246,0.35); }
+  .thumb { position: absolute; top: 50%; left: calc(50% + 16%); width: 16px; height: 16px; background: var(--fg-primary); border: 2px solid var(--accent-primary); border-radius: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 12px rgba(139, 92, 246,0.5); }
+  .ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--fg-tertiary); margin-top: 2px; }
+  .impact { display: flex; gap: 12px; padding: 10px 12px; background: var(--bg-canvas); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+  .impact span { font-family: var(--font-mono); font-size: 12px; color: var(--fg-secondary); }
+  .impact .delta { color: #F43F5E; font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <span class="lbl">What if · Fed rate</span>
+      <span class="val">+0.25% → 5.75%</span>
+    </div>
+    <div class="slider">
+      <div class="track"></div>
+      <div class="fill"></div>
+      <div class="thumb"></div>
+    </div>
+    <div class="ticks"><span>−1.00</span><span>−0.50</span><span>0</span><span>+0.50</span><span>+1.00</span></div>
+    <div class="impact">
+      <span>Projected S&amp;P impact:</span>
+      <span class="delta">−1.42% over 30 sessions</span>
+      <span style="margin-left:auto; color:var(--fg-tertiary)">62% conf</span>
+    </div>
+  </div>
+</body>
+</html>

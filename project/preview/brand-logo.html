@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .card-frame {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .logo-dark {
+    width: 64px; height: 64px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    color: var(--fg-primary);
+  }
+  .logo-dark svg { width: 44px; height: 44px; }
+  .wordmark-big { color: var(--fg-primary); }
+  .wordmark-big svg { width: 220px; height: 55px; display: block; }
+  .mark-row { display: flex; flex-direction: column; gap: 10px; }
+  .mark-row .label { color: var(--fg-tertiary); }
+</style>
+</head>
+<body>
+  <div class="card-frame">
+    <div class="logo-dark">
+      <svg viewBox="0 0 40 40" fill="none">
+        <defs>
+          <linearGradient id="g1" x1="6" y1="30" x2="34" y2="10" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#818CF8"/>
+          </linearGradient>
+        </defs>
+        <line x1="6" y1="30" x2="34" y2="30" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+        <line x1="14" y1="32" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+        <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+        <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+        <circle cx="34" cy="8" r="5" fill="#8B5CF6" opacity="0.25"/>
+      </svg>
+    </div>
+    <div class="mark-row">
+      <div class="wordmark-big">
+        <svg viewBox="0 0 160 40" fill="none">
+          <defs>
+            <linearGradient id="g2" x1="6" y1="30" x2="34" y2="10" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#8B5CF6"/>
+              <stop offset="100%" stop-color="#818CF8"/>
+            </linearGradient>
+          </defs>
+          <line x1="6" y1="30" x2="34" y2="30" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+          <line x1="14" y1="32" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+          <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+          <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+          <circle cx="34" cy="8" r="5" fill="#8B5CF6" opacity="0.25"/>
+          <text x="48" y="26" font-family="Inter, sans-serif" font-size="18" font-weight="600" letter-spacing="-0.01em" fill="currentColor">Apex</text>
+          <text x="96" y="26" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="500" fill="#8B5CF6">500</text>
+        </svg>
+      </div>
+      <div class="label">AI-powered S&amp;P 500 forecasting</div>
+    </div>
+  </div>
+</body>
+</html>

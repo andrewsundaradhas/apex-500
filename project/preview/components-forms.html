@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--fg-tertiary); font-weight: 500; }
+  input, select {
+    font-family: var(--font-sans); font-size: 13px; color: var(--fg-primary);
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    outline: none;
+    transition: all 120ms;
+  }
+  input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(139, 92, 246,0.15); }
+  .search { position: relative; }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--fg-tertiary); stroke-width: 1.75; fill: none; }
+  .search input { padding-left: 34px; width: 100%; }
+  .seg { display: inline-flex; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 3px; gap: 2px; }
+  .seg button { font-family: var(--font-mono); font-size: 12px; font-weight: 500; background: transparent; color: var(--fg-secondary); border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+  .seg button.on { background: var(--bg-elevated); color: var(--fg-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
+  .toggle { width: 32px; height: 18px; background: var(--border-default); border-radius: 999px; position: relative; cursor: pointer; transition: background 120ms; }
+  .toggle.on { background: var(--accent-primary); }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; transition: transform 120ms; }
+  .toggle.on::after { transform: translateX(14px); }
+  .tog-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--fg-primary); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="field">
+      <span class="lbl">Search ticker</span>
+      <div class="search">
+        <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input value="SPX" placeholder="Search...">
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl">Timeframe</span>
+      <div class="seg">
+        <button>1D</button>
+        <button>1W</button>
+        <button class="on">1M</button>
+        <button>1Y</button>
+        <button>5Y</button>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl">Risk profile</span>
+      <select>
+        <option>Moderate</option>
+      </select>
+    </div>
+    <div class="field">
+      <span class="lbl">Overlays</span>
+      <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px">
+        <div class="tog-row"><div class="toggle on"></div>Prediction overlay</div>
+        <div class="tog-row"><div class="toggle on"></div>Confidence band</div>
+        <div class="tog-row"><div class="toggle"></div>RSI / MACD</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

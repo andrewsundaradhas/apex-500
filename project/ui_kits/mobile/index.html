@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex 500 — Mobile</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body { margin: 0; background: #0A0B12; min-height: 100vh; }
+  .stage {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px;
+    padding: 40px; align-items: center; justify-items: center;
+    background:
+      radial-gradient(600px 400px at 20% 30%, rgba(139, 92, 246,0.12), transparent 70%),
+      radial-gradient(500px 350px at 80% 70%, rgba(56, 189, 248,0.08), transparent 70%),
+      #0C0C0E;
+  }
+  .label-sm { text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 14px; }
+
+  /* ===== Screen shared ===== */
+  .screen { width: 100%; height: 100%; background: #0C0C0E; color: #EDEDEF; font-family: var(--font-sans); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .screen-scroll { flex: 1; overflow-y: auto; padding: 0 18px 100px; }
+
+  /* Header block below status bar */
+  .mhead { padding: 56px 20px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .mhead .brand { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+  .mhead .brand .m { font-family: var(--font-mono); color: #8B5CF6; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8B5CF6, #8B5CF6); display: grid; place-items: center; font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: white; }
+
+  /* === SCREEN 1 === */
+  .hero-mcard { margin: 10px 18px 16px; padding: 20px; background: linear-gradient(145deg, rgba(139, 92, 246,0.14), rgba(14,17,24,0.95)); border: 1px solid rgba(139, 92, 246,0.3); border-radius: 20px; position: relative; overflow: hidden; }
+  .hero-mcard::after { content: ''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(139, 92, 246,0.3), transparent 60%); filter: blur(20px); }
+  .hero-mcard .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #A1A1AA; margin-bottom: 4px; font-weight: 500; display:flex; align-items:center; gap: 6px; }
+  .live-dot { width: 6px; height: 6px; background: #22C55E; border-radius: 50%; box-shadow: 0 0 8px #22C55E; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .hero-mcard .ticker { display: flex; align-items: baseline; gap: 8px; }
+  .hero-mcard .price { font-family: var(--font-mono); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hero-mcard .delta { color: #22C55E; font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .hero-mcard svg { margin-top: 12px; width: 100%; height: 100px; }
+
+  .range-tabs { display: flex; gap: 2px; margin: 12px 18px 16px; padding: 3px; background: rgba(20,23,32,0.8); border-radius: 10px; border: 1px solid #222226; }
+  .range-tabs span { flex: 1; text-align: center; padding: 8px; font-family: var(--font-mono); font-size: 11px; color: #70707A; border-radius: 7px; cursor: pointer; letter-spacing: 0.02em; }
+  .range-tabs span.on { background: rgba(139, 92, 246,0.15); color: #8B5CF6; box-shadow: 0 0 12px rgba(139, 92, 246,0.25); }
+
+  .mcard { margin: 0 18px 12px; padding: 16px; background: #141416; border: 1px solid #222226; border-radius: 16px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .mcard .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .mcard .hd h4 { font-size: 12px; font-weight: 600; color: #EDEDEF; margin: 0; letter-spacing: 0.02em; text-transform: uppercase; }
+  .mcard .hd .more { font-size: 11px; color: #70707A; }
+
+  /* Prediction cards */
+  .pred-row { display: flex; gap: 12px; overflow-x: auto; padding: 0 18px 8px; margin-bottom: 8px; scrollbar-width: none; }
+  .pred-row::-webkit-scrollbar { display: none; }
+  .pred { min-width: 150px; padding: 14px; background: #141416; border: 1px solid #222226; border-radius: 14px; position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .pred .hz { font-family: var(--font-mono); font-size: 10px; color: #8B5CF6; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+  .pred .pv { font-family: var(--font-mono); font-size: 18px; font-weight: 500; margin: 6px 0; letter-spacing: -0.01em; }
+  .pred .pd { font-family: var(--font-mono); font-size: 11px; color: #22C55E; }
+  .pred .conf { margin-top: 10px; font-size: 10px; color: #70707A; display: flex; justify-content: space-between; align-items: center; }
+  .pred .conf-ring { width: 22px; height: 22px; position: relative; }
+  .pred .conf-ring svg { transform: rotate(-90deg); }
+  .pred .conf-ring .n { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 8px; color: #EDEDEF; }
+
+  /* Sector heatmap */
+  .sector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .sector { height: 40px; border-radius: 5px; padding: 6px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+  .sector .s-n { font-family: var(--font-mono); font-size: 10px; color: white; font-weight: 500; }
+  .sector .s-v { font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.85); font-variant-numeric: tabular-nums; }
+
+  /* Insights */
+  .ins { padding: 14px 16px; background: #141416; border-left: 2px solid #8B5CF6; border-radius: 0 12px 12px 0; margin: 0 18px 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .ins.pos { border-left-color: #22C55E; }
+  .ins .meta { font-family: var(--font-mono); font-size: 10px; color: #70707A; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ins h5 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+  .ins p { margin: 0; font-size: 12px; color: #A1A1AA; line-height: 1.5; }
+
+  /* Tab bar */
+  .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(14,17,24,0.88); backdrop-filter: blur(24px) saturate(180%); border-top: 1px solid #222226; padding: 10px 12px 32px; display: flex; justify-content: space-around; z-index: 20; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #70707A; font-size: 10px; font-weight: 500; padding: 6px 14px; border-radius: 10px; transition: all 180ms; }
+  .tab.on { color: #8B5CF6; background: rgba(139, 92, 246,0.08); }
+  .tab svg { width: 22px; height: 22px; }
+
+  /* === SCREEN 2 — Prediction detail === */
+  .back-h { padding: 56px 20px 10px; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; color: #A1A1AA; }
+  .back-h svg { width: 18px; height: 18px; }
+
+  .ring-big { position: relative; width: 120px; height: 120px; margin: 12px auto; }
+  .ring-big svg { transform: rotate(-90deg); }
+  .ring-big .n { position: absolute; inset: 0; display: grid; place-items: center; flex-direction: column; text-align: center; }
+  .ring-big .n .big { font-family: var(--font-mono); font-size: 28px; font-weight: 500; color: #EDEDEF; line-height: 1; }
+  .ring-big .n .sm { font-size: 9px; color: #70707A; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  .stat-pill { padding: 12px 14px; background: #141416; border: 1px solid #222226; border-radius: 10px; text-align: center; }
+  .stat-pill .k { font-size: 9px; color: #70707A; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-pill .v { font-family: var(--font-mono); font-size: 16px; color: #EDEDEF; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .stat-pill .v.pos { color: #22C55E; }
+
+  .feat-ln { display: grid; grid-template-columns: 1fr 80px 40px; gap: 10px; align-items: center; font-size: 11px; margin-bottom: 10px; }
+  .feat-ln .nm { color: #A1A1AA; }
+  .feat-ln .bar { height: 4px; background: #1C1C20; border-radius: 2px; position: relative; overflow: hidden; }
+  .feat-ln .bar::after { content:''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--w); background: linear-gradient(90deg, #8B5CF6, #818CF8); border-radius: 2px; box-shadow: 0 0 4px rgba(139, 92, 246,0.4); }
+  .feat-ln .vn { font-family: var(--font-mono); color: #EDEDEF; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* === SCREEN 3 — Watchlist + insights feed === */
+  .wl-row { display: flex; align-items: center; padding: 12px 16px; background: #141416; border: 1px solid #222226; border-radius: 12px; margin-bottom: 8px; }
+  .wl-row .l { flex: 1; }
+  .wl-row .tk { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: #EDEDEF; }
+  .wl-row .nm { font-size: 11px; color: #70707A; margin-top: 1px; }
+  .wl-row .r { text-align: right; }
+  .wl-row .pr { font-family: var(--font-mono); font-size: 13px; color: #EDEDEF; font-variant-numeric: tabular-nums; }
+  .wl-row .dt { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .wl-row svg.sp { width: 60px; height: 24px; margin: 0 14px; }
+
+  .section-h { font-size: 11px; color: #70707A; text-transform: uppercase; letter-spacing: 0.06em; margin: 18px 18px 8px; font-weight: 500; }
+
+  /* Sentiment gauge */
+  .gauge-card { margin: 0 18px 12px; padding: 18px; background: #141416; border: 1px solid #222226; border-radius: 16px; text-align: center; }
+  .gauge-card .gk { font-size: 11px; color: #70707A; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .gauge-card svg { width: 100%; max-width: 260px; height: 90px; }
+  .gauge-card .gv { font-family: var(--font-mono); font-size: 20px; color: #22C55E; font-weight: 500; margin-top: -26px; }
+  .gauge-card .gl { font-size: 11px; color: #A1A1AA; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- SCREEN 1: Home dashboard -->
+  <div>
+    <div id="phone1" style="width:402px; height:874px"></div>
+    <div class="label-sm">01 · Home</div>
+  </div>
+
+  <!-- SCREEN 2: Prediction detail -->
+  <div>
+    <div id="phone2" style="width:402px; height:874px"></div>
+    <div class="label-sm">02 · Prediction detail</div>
+  </div>
+
+  <!-- SCREEN 3: Watchlist + insights -->
+  <div>
+    <div id="phone3" style="width:402px; height:874px"></div>
+    <div class="label-sm">03 · Watchlist & insights</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+
+<script type="text/babel">
+const S1 = () => (
+  <div className="screen">
+    <div className="mhead">
+      <div className="brand">
+        <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+          <defs><linearGradient id="m1" x1="6" y1="30" x2="34" y2="10"><stop offset="0" stopColor="#8B5CF6"/><stop offset="1" stopColor="#818CF8"/></linearGradient></defs>
+          <line x1="14" y1="32" x2="14" y2="8" stroke="#EDEDEF" strokeWidth="1.5" opacity="0.55"/>
+          <line x1="14" y1="22" x2="26" y2="22" stroke="#EDEDEF" strokeWidth="1.5" opacity="0.55"/>
+          <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#m1)" strokeWidth="2.5" strokeLinecap="round"/>
+          <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+        </svg>
+        Apex <span className="m">500</span>
+      </div>
+      <div className="avatar">JR</div>
+    </div>
+
+    <div className="hero-mcard">
+      <div className="label"><span className="live-dot"/>SPX · LIVE</div>
+      <div className="ticker">
+        <span className="price">5,218.47</span>
+        <span className="delta">▲ +42.18 (+0.82%)</span>
+      </div>
+      <svg viewBox="0 0 320 100" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="hf1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="rgba(139, 92, 246,0.4)"/><stop offset="1" stopColor="rgba(139, 92, 246,0)"/></linearGradient>
+          <filter id="gf1"><feGaussianBlur stdDeviation="1.5"/></filter>
+        </defs>
+        <path d="M0 70 L40 65 L80 55 L120 60 L160 45 L200 50 L240 32 L280 28 L320 20 L320 100 L0 100Z" fill="url(#hf1)"/>
+        <path d="M0 70 L40 65 L80 55 L120 60 L160 45 L200 50 L240 32 L280 28 L320 20" stroke="#EDEDEF" strokeWidth="1.8" fill="none"/>
+        <path d="M240 32 L280 22 L320 10" stroke="#8B5CF6" strokeWidth="1.8" strokeDasharray="4 3" fill="none" filter="url(#gf1)"/>
+        <circle cx="320" cy="10" r="3" fill="#8B5CF6"/>
+      </svg>
+    </div>
+
+    <div className="range-tabs">
+      <span>1D</span><span>1W</span><span className="on">1M</span><span>3M</span><span>1Y</span><span>5Y</span>
+    </div>
+
+    <div style={{padding:'0 18px', fontSize:11, color:'#70707A', textTransform:'uppercase', letterSpacing:'0.06em', margin:'6px 0 10px', fontWeight:500}}>AI Predictions</div>
+    <div className="pred-row">
+      <div className="pred">
+        <div className="hz">● NEXT DAY</div>
+        <div className="pv">5,225.8</div>
+        <div className="pd">▲ +0.14%</div>
+        <div className="conf">
+          <span>Bullish</span>
+          <div className="conf-ring">
+            <svg width="22" height="22" viewBox="0 0 22 22">
+              <circle cx="11" cy="11" r="8" fill="none" stroke="#2A2A30" strokeWidth="2"/>
+              <circle cx="11" cy="11" r="8" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeDasharray="50.2" strokeDashoffset="15" strokeLinecap="round"/>
+            </svg>
+            <div className="n">70</div>
+          </div>
+        </div>
+      </div>
+      <div className="pred">
+        <div className="hz">● NEXT WEEK</div>
+        <div className="pv">5,264.1</div>
+        <div className="pd">▲ +0.87%</div>
+        <div className="conf">
+          <span>Bullish</span>
+          <div className="conf-ring">
+            <svg width="22" height="22" viewBox="0 0 22 22">
+              <circle cx="11" cy="11" r="8" fill="none" stroke="#2A2A30" strokeWidth="2"/>
+              <circle cx="11" cy="11" r="8" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeDasharray="50.2" strokeDashoffset="14" strokeLinecap="round"/>
+            </svg>
+            <div className="n">72</div>
+          </div>
+        </div>
+      </div>
+      <div className="pred">
+        <div className="hz">● NEXT MONTH</div>
+        <div className="pv">5,342.7</div>
+        <div className="pd">▲ +2.38%</div>
+        <div className="conf" style={{color:'#70707A'}}>
+          <span style={{color:'#A1A1AA'}}>Neutral</span>
+          <div className="conf-ring">
+            <svg width="22" height="22" viewBox="0 0 22 22">
+              <circle cx="11" cy="11" r="8" fill="none" stroke="#2A2A30" strokeWidth="2"/>
+              <circle cx="11" cy="11" r="8" fill="none" stroke="#EAB308" strokeWidth="2" strokeDasharray="50.2" strokeDashoffset="25" strokeLinecap="round"/>
+            </svg>
+            <div className="n">58</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="mcard">
+      <div className="hd"><h4>Sector heatmap</h4><span className="more">Today</span></div>
+      <div className="sector-grid">
+        {[
+          {n:'XLK', v:'+1.8', c:'rgba(34, 197, 94,0.85)'},
+          {n:'XLF', v:'+1.2', c:'rgba(34, 197, 94,0.65)'},
+          {n:'XLE', v:'+2.1', c:'rgba(34, 197, 94,0.95)'},
+          {n:'XLV', v:'−0.1', c:'rgba(58,64,80,0.8)'},
+          {n:'XLY', v:'+0.4', c:'rgba(34, 197, 94,0.35)'},
+          {n:'XLI', v:'+0.6', c:'rgba(34, 197, 94,0.5)'},
+          {n:'XLP', v:'−0.3', c:'rgba(244, 63, 94,0.5)'},
+          {n:'XLU', v:'−0.8', c:'rgba(244, 63, 94,0.75)'},
+        ].map((s,i)=>(
+          <div key={i} className="sector" style={{background: s.c}}>
+            <div className="s-n">{s.n}</div><div className="s-v">{s.v}%</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div style={{padding:'0 18px', fontSize:11, color:'#70707A', textTransform:'uppercase', letterSpacing:'0.06em', margin:'14px 0 8px', fontWeight:500}}>Insights</div>
+    <div className="ins pos">
+      <div className="meta">AI · 2m ago · 0.71 conf</div>
+      <h5>Tech momentum pushing index higher</h5>
+      <p>Semis leading with breadth &gt;60%. Historically followed by +0.6% median 5D returns.</p>
+    </div>
+
+    <div className="tab-bar">
+      <div className="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Home</div>
+      <div className="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Predict</div>
+      <div className="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Watchlist</div>
+      <div className="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>More</div>
+    </div>
+  </div>
+);
+
+const S2 = () => (
+  <div className="screen">
+    <div className="back-h">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>5-Day Forecast</span>
+    </div>
+
+    <div className="screen-scroll" style={{paddingTop: 4}}>
+      <div style={{display:'flex', alignItems:'center', gap:6, marginBottom:10}}>
+        <span style={{padding:'4px 10px', background:'rgba(139, 92, 246,0.15)', color:'#C4B5FD', fontSize:10, borderRadius:999, border:'1px solid rgba(139, 92, 246,0.3)', fontWeight:500, letterSpacing:'0.02em'}}>● 5D HORIZON</span>
+        <span style={{padding:'4px 10px', background:'rgba(34, 197, 94,0.12)', color:'#4ADE80', fontSize:10, borderRadius:999, border:'1px solid rgba(34, 197, 94,0.3)', fontWeight:500}}>BULLISH</span>
+      </div>
+      <h2 style={{fontSize:30, fontWeight:600, letterSpacing:'-0.02em', margin:'2px 0 14px'}}>
+        <span style={{fontFamily:'var(--font-mono)', color:'#22C55E'}}>5,264.10</span>
+      </h2>
+
+      <div className="ring-big">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#2A2A30" strokeWidth="6"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="url(#rg)" strokeWidth="6" strokeLinecap="round" strokeDasharray="314" strokeDashoffset="88" style={{filter:'drop-shadow(0 0 8px rgba(139, 92, 246,0.6))'}}/>
+          <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8B5CF6"/><stop offset="1" stopColor="#38BDF8"/></linearGradient></defs>
+        </svg>
+        <div className="n"><div className="big">72%</div><div className="sm">Confidence</div></div>
+      </div>
+
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, margin:'18px 0'}}>
+        <div className="stat-pill"><div className="k">Target</div><div className="v pos">+0.87%</div></div>
+        <div className="stat-pill"><div className="k">95% low</div><div className="v">5,198</div></div>
+        <div className="stat-pill"><div className="k">95% high</div><div className="v">5,332</div></div>
+      </div>
+
+      <div className="mcard" style={{margin:0, marginBottom:12}}>
+        <div className="hd"><h4>Projection</h4><span className="more">+5 sessions</span></div>
+        <svg viewBox="0 0 340 140" preserveAspectRatio="none" style={{width:'100%', height:130}}>
+          <path d="M0 100 L40 90 L80 85 L120 78 L160 70 L200 75 L200 140 L0 140 Z" fill="rgba(139, 92, 246,0.1)"/>
+          <path d="M0 100 L40 90 L80 85 L120 78 L160 70 L200 75" stroke="#EDEDEF" strokeWidth="1.8" fill="none"/>
+          <path d="M200 75 L240 78 L280 58 L320 50 L340 38 L340 20 L320 32 L280 42 L240 58 L200 75 Z" fill="rgba(139, 92, 246,0.18)"/>
+          <path d="M200 75 L240 66 L280 48 L320 38 L340 28" stroke="#8B5CF6" strokeWidth="2" strokeDasharray="5 3" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(139, 92, 246,0.7))'}}/>
+          <line x1="200" y1="0" x2="200" y2="140" stroke="#3A3A42" strokeDasharray="2 3"/>
+          <circle cx="340" cy="28" r="4" fill="#8B5CF6"/>
+        </svg>
+      </div>
+
+      <div className="mcard" style={{margin:0, marginBottom:12}}>
+        <div className="hd"><h4>Top drivers</h4><span className="more">Attention</span></div>
+        <div className="feat-ln"><div className="nm">Semis momentum</div><div className="bar" style={{'--w':'92%'}}></div><div className="vn">0.92</div></div>
+        <div className="feat-ln"><div className="nm">XLF str.</div><div className="bar" style={{'--w':'78%'}}></div><div className="vn">0.78</div></div>
+        <div className="feat-ln"><div className="nm">VIX regime</div><div className="bar" style={{'--w':'64%'}}></div><div className="vn">0.64</div></div>
+        <div className="feat-ln" style={{marginBottom:0}}><div className="nm">Breadth</div><div className="bar" style={{'--w':'58%'}}></div><div className="vn">0.58</div></div>
+      </div>
+
+      <div className="mcard" style={{margin:0, marginBottom:12}}>
+        <div className="hd"><h4>Ensemble models</h4></div>
+        <div style={{display:'flex', flexDirection:'column', gap:10}}>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:12}}><span style={{color:'#A1A1AA'}}>LSTM-48 (35%)</span><span style={{fontFamily:'var(--font-mono)', color:'#EDEDEF'}}>5,261.8 <span style={{color:'#22C55E'}}>+0.83%</span></span></div>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:12}}><span style={{color:'#A1A1AA'}}>Transformer-L (45%)</span><span style={{fontFamily:'var(--font-mono)', color:'#EDEDEF'}}>5,267.2 <span style={{color:'#22C55E'}}>+0.94%</span></span></div>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:12}}><span style={{color:'#A1A1AA'}}>GBM (20%)</span><span style={{fontFamily:'var(--font-mono)', color:'#EDEDEF'}}>5,260.5 <span style={{color:'#22C55E'}}>+0.81%</span></span></div>
+        </div>
+      </div>
+
+      <button style={{width:'100%', padding:14, background:'#8B5CF6', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:500, boxShadow:'0 8px 24px rgba(139, 92, 246,0.35)'}}>Save prediction</button>
+    </div>
+  </div>
+);
+
+const S3 = () => (
+  <div className="screen">
+    <div className="mhead">
+      <div style={{fontSize:24, fontWeight:600, letterSpacing:'-0.02em'}}>Watchlist</div>
+      <div style={{width:32, height:32, borderRadius:8, background:'#1C1C20', display:'grid', placeItems:'center', color:'#A1A1AA'}}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+    </div>
+
+    <div className="screen-scroll" style={{paddingTop: 2}}>
+
+      <div className="gauge-card">
+        <div className="gk">Market Sentiment</div>
+        <svg viewBox="0 0 260 90">
+          <defs>
+            <linearGradient id="gg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#F43F5E"/><stop offset="0.5" stopColor="#EAB308"/><stop offset="1" stopColor="#22C55E"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 80 A110 110 0 0 1 240 80" fill="none" stroke="#1C1C20" strokeWidth="12" strokeLinecap="round"/>
+          <path d="M20 80 A110 110 0 0 1 200 28" fill="none" stroke="url(#gg)" strokeWidth="12" strokeLinecap="round"/>
+          <circle cx="200" cy="28" r="7" fill="#22C55E" style={{filter:'drop-shadow(0 0 8px rgba(34, 197, 94,0.6))'}}/>
+        </svg>
+        <div className="gv">Bullish 68</div>
+        <div className="gl">Tech + financials leading</div>
+      </div>
+
+      <div className="section-h">Holdings</div>
+      <div style={{padding:'0 18px'}}>
+        {[
+          {tk:'SPY', nm:'S&P 500 ETF', pr:'521.84', dt:'+0.82%', up:true, pts:'M0 15 L15 12 L30 14 L45 8 L60 5'},
+          {tk:'QQQ', nm:'Nasdaq 100', pr:'445.19', dt:'+1.14%', up:true, pts:'M0 18 L15 14 L30 10 L45 6 L60 3'},
+          {tk:'NVDA', nm:'NVIDIA', pr:'918.42', dt:'+2.85%', up:true, pts:'M0 20 L15 12 L30 8 L45 6 L60 2'},
+          {tk:'AAPL', nm:'Apple Inc.', pr:'172.48', dt:'−0.42%', up:false, pts:'M0 8 L15 10 L30 12 L45 16 L60 14'},
+          {tk:'VIX', nm:'Volatility Index', pr:'14.20', dt:'−1.82%', up:false, pts:'M0 5 L15 8 L30 12 L45 16 L60 18'},
+        ].map((r,i)=>(
+          <div key={i} className="wl-row">
+            <div className="l"><div className="tk">{r.tk}</div><div className="nm">{r.nm}</div></div>
+            <svg className="sp" viewBox="0 0 60 24" preserveAspectRatio="none">
+              <path d={r.pts} stroke={r.up?'#22C55E':'#F43F5E'} strokeWidth="1.5" fill="none"/>
+            </svg>
+            <div className="r">
+              <div className="pr">{r.pr}</div>
+              <div className="dt" style={{color: r.up ? '#22C55E' : '#F43F5E'}}>{r.dt}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="section-h">Insight feed</div>
+      <div className="ins pos">
+        <div className="meta">AI · 2m ago · 0.71 conf</div>
+        <h5>Tech momentum carrying the index</h5>
+        <p>XLK +1.8% today. Breadth at 62%. History suggests +0.6% 5D median follow-through.</p>
+      </div>
+      <div className="ins">
+        <div className="meta">ANOMALY · 14m ago</div>
+        <h5>VIX regime shift detected</h5>
+        <p>VIX crossed 15 handle downward. Vol compression regime now active.</p>
+      </div>
+      <div className="ins pos">
+        <div className="meta">NEWS · 1h ago</div>
+        <h5>Fed minutes dovish tilt</h5>
+        <p>Rate-cut path unchanged. Market pricing 2.5 cuts by YE2026.</p>
+      </div>
+    </div>
+
+    <div className="tab-bar">
+      <div className="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Home</div>
+      <div className="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Predict</div>
+      <div className="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Watchlist</div>
+      <div className="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>More</div>
+    </div>
+  </div>
+);
+
+function mount(el, node) {
+  ReactDOM.createRoot(el).render(
+    <IOSDevice dark={true} width={402} height={874}>{node}</IOSDevice>
+  );
+}
+mount(document.getElementById('phone1'), <S1/>);
+mount(document.getElementById('phone2'), <S2/>);
+mount(document.getElementById('phone3'), <S3/>);
+</script>
+</body>
+</html>

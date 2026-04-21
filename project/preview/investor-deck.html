@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Apex 500 — Investor Deck</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="deck-stage.js"></script>
+<style>
+  :root {
+    --ink: #EDEDEF;
+    --ink-2: #A1A1AA;
+    --ink-3: #70707A;
+    --stroke: #222226;
+    --stroke-2: #2A2A30;
+    --bg: #0C0C0E;
+    --surface: #141416;
+    --elev: #1C1C20;
+    --accent: #8B5CF6;
+    --pos: #22C55E;
+    --neg: #F43F5E;
+  }
+
+  html, body { margin: 0; padding: 0; background: #000; font-family: var(--font-sans); color: var(--ink); }
+
+  section {
+    background: var(--bg);
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- shared utilities --- */
+  .eye {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eye::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
+
+  .deck-pad { padding: 80px 120px; flex: 1; display: flex; flex-direction: column; }
+  .foot {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 32px 120px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink-3);
+    letter-spacing: 0.04em;
+  }
+  .foot .logo-mini { display: inline-flex; align-items: center; gap: 10px; color: var(--ink-2); font-weight: 500; }
+  .foot .logo-mini svg { color: var(--accent); }
+
+  .grid-bg {
+    position: absolute; inset: 0; opacity: 0.3;
+    background-image:
+      linear-gradient(var(--stroke) 1px, transparent 1px),
+      linear-gradient(90deg, var(--stroke) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+
+  /* === SLIDE 01 — Title === */
+  .s-title { background: radial-gradient(ellipse at 30% 40%, rgba(139, 92, 246,0.12), transparent 60%), var(--bg); }
+  .s-title .deck-pad { justify-content: space-between; padding: 80px 120px; }
+  .s-title .topbar { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); }
+  .s-title .topbar .logo { display: inline-flex; align-items: center; gap: 14px; color: var(--ink); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; font-family: var(--font-sans); }
+  .s-title .topbar .logo .mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #A78BFA, #7C3AED);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    box-shadow: 0 0 24px rgba(139, 92, 246,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .s-title .topbar .logo .mark svg { color: white; }
+  .s-title h1 { font-size: 128px; line-height: 0.95; letter-spacing: -0.04em; max-width: 1400px; margin-bottom: 32px; }
+  .s-title h1 .grad { background: linear-gradient(90deg, #8B5CF6 0%, #38BDF8 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .s-title .sub { font-size: 24px; color: var(--ink-2); max-width: 820px; line-height: 1.45; }
+  .s-title .meta { display: flex; gap: 48px; align-items: center; }
+  .s-title .meta .item { display: flex; flex-direction: column; gap: 4px; }
+  .s-title .meta .k { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .s-title .meta .v { font-size: 16px; color: var(--ink); font-weight: 500; }
+
+  .hero-viz {
+    position: absolute;
+    right: -120px; top: 20%;
+    width: 820px; height: 820px;
+    pointer-events: none;
+  }
+  .hero-viz .orb {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(139, 92, 246,0.55), rgba(139, 92, 246,0.05) 55%, transparent 70%);
+    filter: blur(8px);
+    animation: orb-pulse 6s ease-in-out infinite;
+  }
+  @keyframes orb-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.04); opacity: 1; }
+  }
+  .hero-viz .ring {
+    position: absolute; inset: 18%;
+    border: 1px solid rgba(139, 92, 246,0.25);
+    border-radius: 50%;
+    box-shadow: inset 0 0 120px rgba(139, 92, 246,0.2);
+  }
+  .hero-viz .ring.r2 { inset: 8%; border-color: rgba(139, 92, 246,0.12); }
+  .hero-viz .ring.r3 { inset: 30%; border-color: rgba(139, 92, 246,0.35); }
+
+  /* === SLIDE 02 — The Problem === */
+  .s-problem { background: var(--bg); }
+  .s-problem .deck-pad { gap: 48px; }
+  .s-problem .hdr { display: flex; align-items: baseline; gap: 32px; }
+  .s-problem h1 { font-size: 88px; line-height: 1.02; max-width: 1200px; }
+  .s-problem .two {
+    flex: 1; display: grid; grid-template-columns: 1fr 1.1fr; gap: 80px; align-items: center;
+  }
+  .retail-fail {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex; flex-direction: column; gap: 16px;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .stat-card.big { grid-column: 1 / -1; }
+  .stat-card .big-num {
+    font-family: var(--font-mono); font-size: 88px; font-weight: 500; letter-spacing: -0.03em;
+    color: var(--neg); font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .stat-card.pos .big-num { color: var(--pos); }
+  .stat-card.acc .big-num { color: var(--accent); }
+  .stat-card .lbl { font-size: 16px; color: var(--ink-2); line-height: 1.5; }
+  .stat-card .src { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; }
+  .s-problem .quote {
+    font-size: 40px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 500;
+    text-wrap: balance; max-width: 640px;
+  }
+  .s-problem .quote .hi { color: var(--accent); }
+
+  /* === SLIDE 03 — Opportunity === */
+  .s-opp { background: var(--bg); }
+  .s-opp .deck-pad { gap: 56px; }
+  .s-opp h1 { font-size: 92px; line-height: 1.0; max-width: 1400px; }
+  .s-opp h1 em { font-style: normal; color: var(--accent); }
+  .s-opp .grid-3 {
+    flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .tam-card {
+    background: var(--surface);
+    border: 1px solid var(--stroke);
+    border-radius: 20px;
+    padding: 48px;
+    display: flex; flex-direction: column; gap: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .tam-card .tag { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .tam-card h3 { font-size: 28px; letter-spacing: -0.02em; }
+  .tam-card .val {
+    font-family: var(--font-mono); font-size: 72px; font-weight: 500; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; line-height: 1; margin-top: auto;
+  }
+  .tam-card .val .cur { color: var(--ink-3); font-size: 44px; margin-right: 6px; }
+  .tam-card .desc { font-size: 15px; color: var(--ink-2); line-height: 1.5; }
+  .tam-card.tam { border-color: rgba(139, 92, 246,0.3); background: radial-gradient(ellipse at top right, rgba(139, 92, 246,0.1), transparent 60%), var(--surface); }
+  .tam-card.tam .val { color: var(--accent); }
+  .tam-card.tam::after {
+    content: '';
+    position: absolute; top: 20px; right: 20px; width: 8px; height: 8px;
+    background: var(--accent); border-radius: 50%;
+    box-shadow: 0 0 16px var(--accent);
+  }
+  .tam-card .bar {
+    height: 6px; background: var(--stroke); border-radius: 3px; overflow: hidden;
+  }
+  .tam-card .bar .fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), #38BDF8);
+    border-radius: 3px;
+  }
+
+  /* === SLIDE 04 — Solution === */
+  .s-solution { background: var(--bg); }
+  .s-solution .deck-pad { gap: 40px; }
+  .s-solution .headings { max-width: 1100px; }
+  .s-solution h1 { font-size: 96px; line-height: 0.98; margin-bottom: 24px; }
+  .s-solution h1 .grad { background: linear-gradient(90deg, #8B5CF6, #38BDF8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .s-solution .lede { font-size: 22px; color: var(--ink-2); line-height: 1.5; max-width: 820px; }
+  .s-solution .product-viz {
+    flex: 1; display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: center;
+  }
+  .pillars { display: flex; flex-direction: column; gap: 20px; }
+  .pillar {
+    display: flex; gap: 20px;
+    padding: 24px 0;
+    border-top: 1px solid var(--stroke);
+  }
+  .pillar:last-child { border-bottom: 1px solid var(--stroke); }
+  .pillar .ico {
+    flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(139, 92, 246,0.1); display: grid; place-items: center; color: var(--accent);
+    border: 1px solid rgba(139, 92, 246,0.25);
+  }
+  .pillar .title { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  .pillar .desc { font-size: 15px; color: var(--ink-2); line-height: 1.45; }
+
+  /* Mock product frame */
+  .product-frame {
+    background: var(--surface);
+    border: 1px solid var(--stroke-2);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .pf-chrome {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: rgba(14,17,24,0.8);
+    border-bottom: 1px solid var(--stroke);
+  }
+  .pf-chrome .dots { display: flex; gap: 6px; }
+  .pf-chrome .dots span { width: 11px; height: 11px; border-radius: 50%; }
+  .pf-chrome .dots .r { background: #EF5F57; } .pf-chrome .dots .y { background: #F5BF4F; } .pf-chrome .dots .g { background: #62C554; }
+  .pf-chrome .url { flex: 1; padding: 6px 14px; background: var(--elev); color: var(--ink-2); font-family: var(--font-mono); font-size: 12px; border-radius: 6px; }
+  .pf-body { padding: 28px; }
+  .pf-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+  .pf-head .title { font-size: 14px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; font-family: var(--font-mono); }
+  .pf-head .pill { padding: 4px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; background: rgba(139, 92, 246,0.15); color: #C4B5FD; letter-spacing: 0.04em; text-transform: uppercase; }
+  .pf-metric { display: flex; align-items: baseline; gap: 18px; margin-bottom: 16px; }
+  .pf-metric .v { font-family: var(--font-mono); font-size: 56px; font-weight: 500; letter-spacing: -0.03em; }
+  .pf-metric .d { font-family: var(--font-mono); font-size: 20px; color: var(--pos); font-weight: 500; }
+  .pf-chart { width: 100%; height: 180px; }
+
+  /* === SLIDE 05 — Accuracy / Proof === */
+  .s-proof { background: var(--bg); }
+  .s-proof .deck-pad { gap: 48px; }
+  .s-proof .hdr { display: flex; justify-content: space-between; align-items: end; gap: 48px; }
+  .s-proof h1 { font-size: 88px; line-height: 0.98; max-width: 1100px; }
+  .s-proof h1 .hi { color: var(--accent); }
+  .s-proof .side-note { font-size: 16px; color: var(--ink-2); max-width: 360px; line-height: 1.5; padding: 16px 20px; border-left: 2px solid var(--accent); }
+  .proof-grid { flex: 1; display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
+  .accuracy-chart {
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 20px;
+    padding: 40px; display: flex; flex-direction: column; gap: 28px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .accuracy-chart .ac-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .accuracy-chart .ac-title { font-size: 20px; font-weight: 500; }
+  .accuracy-chart .ac-sub { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; }
+  .accuracy-chart .leg { display: flex; gap: 20px; font-size: 13px; color: var(--ink-2); font-family: var(--font-mono); }
+  .accuracy-chart .leg .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .accuracy-chart .chart { flex: 1; width: 100%; min-height: 380px; }
+  .proof-side { display: flex; flex-direction: column; gap: 16px; }
+  .proof-metric {
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 16px;
+    padding: 28px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .proof-metric .lbl { font-size: 14px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-mono); font-weight: 500; }
+  .proof-metric .val { font-family: var(--font-mono); font-size: 88px; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .proof-metric .val .u { font-size: 40px; color: var(--ink-3); }
+  .proof-metric.pos .val { color: var(--pos); }
+  .proof-metric.acc .val { color: var(--accent); }
+  .proof-metric .note { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+
+  /* === SLIDE 06 — Traction === */
+  .s-traction { background: var(--bg); }
+  .s-traction .deck-pad { gap: 48px; }
+  .s-traction h1 { font-size: 88px; line-height: 0.98; }
+  .s-traction h1 .grad { background: linear-gradient(90deg, #8B5CF6, #38BDF8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .traction-main { flex: 1; display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; }
+  .growth-chart { background: var(--surface); border: 1px solid var(--stroke); border-radius: 20px; padding: 36px; display: flex; flex-direction: column; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .growth-chart .gh-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 20px; }
+  .growth-chart .gh-title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+  .growth-chart .gh-sub { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; }
+  .growth-chart .gh-big { font-family: var(--font-mono); font-size: 56px; font-weight: 500; letter-spacing: -0.03em; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1; }
+  .growth-chart .gh-delta { font-family: var(--font-mono); font-size: 14px; color: var(--pos); margin-top: 4px; }
+  .growth-chart .chart { flex: 1; width: 100%; min-height: 320px; }
+  .traction-side { display: grid; grid-template-rows: repeat(3, 1fr); gap: 16px; }
+  .ts-card { background: var(--surface); border: 1px solid var(--stroke); border-radius: 16px; padding: 24px 28px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .ts-card .lbl { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .ts-card .val { font-family: var(--font-mono); font-size: 52px; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .ts-card .delta { font-family: var(--font-mono); font-size: 13px; color: var(--pos); }
+
+  /* === SLIDE 07 — Business Model === */
+  .s-model { background: var(--bg); }
+  .s-model .deck-pad { gap: 48px; }
+  .s-model h1 { font-size: 88px; line-height: 0.98; }
+  .pricing-grid {
+    flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .price-card {
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 20px;
+    padding: 40px; display: flex; flex-direction: column; gap: 20px;
+    position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .price-card.featured { border-color: rgba(139, 92, 246,0.4); background: linear-gradient(180deg, rgba(139, 92, 246,0.08), transparent 40%), var(--surface); }
+  .price-card.featured::before {
+    content: 'Most popular'; position: absolute; top: -12px; left: 40px;
+    padding: 4px 12px; background: var(--accent); color: white;
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    border-radius: 6px; font-weight: 600;
+  }
+  .price-card .name { font-family: var(--font-mono); font-size: 14px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+  .price-card .tier-head { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; }
+  .price-card .price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 4px; }
+  .price-card .price .amt { font-size: 64px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
+  .price-card .price .per { font-size: 14px; color: var(--ink-3); margin-left: 4px; }
+  .price-card.featured .price .amt { color: var(--accent); }
+  .price-card ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+  .price-card li { display: flex; gap: 12px; font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+  .price-card li::before {
+    content: ''; flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236366F1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8l3.5 3.5L13 4.5'/%3E%3C/svg%3E");
+    background-size: contain; background-repeat: no-repeat;
+  }
+  .price-card .econ {
+    margin-top: auto; padding-top: 20px; border-top: 1px solid var(--stroke);
+    display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3);
+  }
+  .price-card .econ .v { color: var(--ink); font-weight: 500; }
+
+  /* === SLIDE 08 — Team === */
+  .s-team { background: var(--bg); }
+  .s-team .deck-pad { gap: 48px; }
+  .s-team h1 { font-size: 88px; line-height: 0.98; }
+  .team-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .person {
+    background: var(--surface); border: 1px solid var(--stroke); border-radius: 20px;
+    padding: 32px; display: flex; flex-direction: column; gap: 20px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .person .avatar {
+    width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, var(--elev), var(--surface));
+    border: 1px solid var(--stroke-2); display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 24px; font-weight: 500; color: var(--accent);
+  }
+  .person.b .avatar { color: #38BDF8; }
+  .person.c .avatar { color: #22C55E; }
+  .person.d .avatar { color: #EAB308; }
+  .person .name { font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+  .person .role { font-family: var(--font-mono); font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+  .person.b .role { color: #38BDF8; }
+  .person.c .role { color: #22C55E; }
+  .person.d .role { color: #EAB308; }
+  .person .bio { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+  .person .prior { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid var(--stroke); padding-top: 16px; margin-top: auto; }
+
+  /* === SLIDE 09 — The Ask === */
+  .s-ask {
+    background: radial-gradient(ellipse 1200px 800px at 70% 40%, rgba(139, 92, 246,0.15), transparent 60%), var(--bg);
+  }
+  .s-ask .deck-pad { gap: 48px; justify-content: center; }
+  .s-ask .hdr { display: flex; justify-content: space-between; align-items: baseline; }
+  .s-ask h1 { font-size: 112px; line-height: 0.95; max-width: 1400px; }
+  .s-ask h1 .grad { background: linear-gradient(90deg, #8B5CF6, #38BDF8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ask-layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center; }
+  .ask-big {
+    background: linear-gradient(135deg, rgba(139, 92, 246,0.15), rgba(56, 189, 248,0.08));
+    border: 1px solid rgba(139, 92, 246,0.4);
+    border-radius: 24px; padding: 56px;
+    box-shadow: 0 0 80px rgba(139, 92, 246,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .ask-big .lbl { font-family: var(--font-mono); font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+  .ask-big .v {
+    font-family: var(--font-mono); font-size: 128px; font-weight: 500; letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums; line-height: 0.95;
+    background: linear-gradient(135deg, #EDEDEF, #C4B5FD); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .ask-big .v .cur { color: var(--ink-3); font-size: 64px; margin-right: 8px; -webkit-text-fill-color: var(--ink-3); }
+  .ask-big .round { font-family: var(--font-mono); font-size: 16px; color: var(--ink-2); margin-top: 12px; }
+  .use-list { display: flex; flex-direction: column; gap: 20px; }
+  .use-list .lbl { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .use-item { display: flex; align-items: center; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--stroke); }
+  .use-item:last-child { border-bottom: none; }
+  .use-item .pct { font-family: var(--font-mono); font-size: 32px; font-weight: 500; color: var(--accent); font-variant-numeric: tabular-nums; min-width: 80px; }
+  .use-item .lbl2 { font-size: 17px; color: var(--ink); font-weight: 500; }
+  .use-item .desc { font-size: 14px; color: var(--ink-2); margin-top: 2px; }
+  .use-item .bar { flex: 1; height: 4px; background: var(--stroke); border-radius: 2px; overflow: hidden; max-width: 120px; }
+  .use-item .bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), #38BDF8); }
+
+  /* === SLIDE 10 — Closing === */
+  .s-close {
+    background: radial-gradient(ellipse at 50% 70%, rgba(139, 92, 246,0.15), transparent 60%), #05060A;
+  }
+  .s-close .deck-pad { justify-content: space-between; }
+  .s-close .topbar { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); }
+  .s-close .topbar .logo { display: inline-flex; align-items: center; gap: 14px; color: var(--ink); font-size: 16px; font-weight: 600; font-family: var(--font-sans); }
+  .s-close .topbar .logo .mark { width: 36px; height: 36px; background: linear-gradient(135deg, #A78BFA, #7C3AED); border-radius: 10px; display: grid; place-items: center; box-shadow: 0 0 24px rgba(139, 92, 246,0.45); }
+  .s-close .big {
+    text-align: center; display: flex; flex-direction: column; align-items: center; gap: 40px;
+  }
+  .s-close .eyebrow { font-family: var(--font-mono); font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.2em; display: inline-flex; align-items: center; gap: 16px; }
+  .s-close .eyebrow .ln { width: 60px; height: 1px; background: var(--accent); }
+  .s-close h1 { font-size: 160px; line-height: 0.9; letter-spacing: -0.04em; max-width: 1500px; margin: 0 auto; }
+  .s-close h1 .grad { background: linear-gradient(90deg, #8B5CF6 0%, #38BDF8 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .s-close .contact {
+    display: flex; gap: 48px; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 16px; color: var(--ink-2);
+  }
+  .s-close .contact a { color: var(--ink); text-decoration: none; }
+  .s-close .contact .sep { width: 1px; height: 16px; background: var(--stroke-2); }
+  .s-close .sig {
+    display: flex; justify-content: space-between; align-items: end;
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); letter-spacing: 0.06em;
+  }
+
+  /* Page numbers */
+  .page-num { font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); letter-spacing: 0.06em; }
+  .page-num .sep { margin: 0 4px; color: var(--ink-3); opacity: 0.5; }
+  .page-num .cur { color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ========== 01 — TITLE ========== -->
+  <section class="s-title" data-label="Title">
+    <div class="grid-bg"></div>
+    <div class="hero-viz">
+      <div class="orb"></div>
+      <div class="ring r2"></div>
+      <div class="ring"></div>
+      <div class="ring r3"></div>
+    </div>
+    <div class="deck-pad">
+      <div class="topbar">
+        <div class="logo">
+          <div class="mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+          </div>
+          Apex 500
+        </div>
+        <span>Series A · Confidential</span>
+      </div>
+
+      <div>
+        <div class="eye" style="margin-bottom: 40px;">Investor deck · Q2 2025</div>
+        <h1>Predicting the <span class="grad">S&amp;P 500</span><br>one trading day at a time.</h1>
+        <p class="sub">An AI platform that turns 40 years of market microstructure into real-time, probability-weighted forecasts — for traders, funds, and quants.</p>
+      </div>
+
+      <div class="meta">
+        <div class="item"><span class="k">Stage</span><span class="v">Series A</span></div>
+        <div class="item"><span class="k">Raising</span><span class="v">$12M</span></div>
+        <div class="item"><span class="k">Valuation</span><span class="v">$72M post</span></div>
+        <div class="item"><span class="k">Lead sought</span><span class="v">AI / fintech</span></div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> apex500.com</span>
+      <span class="page-num"><span class="cur">01</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 02 — PROBLEM ========== -->
+  <section class="s-problem" data-label="Problem">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div class="eye">The problem</div>
+      </div>
+      <h1>Markets run on asymmetric information. Most traders are on the wrong side.</h1>
+
+      <div class="two">
+        <div class="retail-fail">
+          <div class="stat-card big">
+            <div class="big-num">79%</div>
+            <div class="lbl">of retail day traders lose money over a 12-month period.</div>
+            <div class="src">Illustrative · typical industry benchmark</div>
+          </div>
+          <div class="stat-card pos">
+            <div class="big-num">$40B+</div>
+            <div class="lbl">spent annually on institutional market-data &amp; terminals.</div>
+            <div class="src">Source · industry estimates</div>
+          </div>
+          <div class="stat-card acc">
+            <div class="big-num">$0</div>
+            <div class="lbl">of that reaches serious individual traders as forecasting tools.</div>
+            <div class="src">Market gap</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="quote">Wall Street pays <span class="hi">$24,000/year</span> per seat for what should be<br>a consumer product.</div>
+          <div style="font-family: var(--font-mono); color: var(--ink-3); font-size: 14px; margin-top: 24px; letter-spacing: 0.05em;">— Bloomberg Terminal, standard license</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">02</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 03 — OPPORTUNITY ========== -->
+  <section class="s-opp" data-label="Opportunity">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div class="eye">Market size</div>
+      </div>
+      <h1>A <em>$47B</em> retail-trading market meets<br>consumer-priced AI for the first time.</h1>
+
+      <div class="grid-3">
+        <div class="tam-card">
+          <div class="tag">SAM · 2025</div>
+          <h3>US self-directed traders</h3>
+          <div class="desc">Active retail &amp; prosumer traders using at least one paid analytics tool.</div>
+          <div class="bar"><div class="fill" style="width: 42%;"></div></div>
+          <div class="val"><span class="cur">$</span>12B</div>
+        </div>
+        <div class="tam-card tam">
+          <div class="tag">TAM · 2027</div>
+          <h3>Global retail analytics</h3>
+          <div class="desc">Individuals worldwide trading equities &amp; derivatives with AI-assisted tooling.</div>
+          <div class="bar"><div class="fill" style="width: 90%;"></div></div>
+          <div class="val"><span class="cur">$</span>47B</div>
+        </div>
+        <div class="tam-card">
+          <div class="tag">Growth · CAGR</div>
+          <h3>AI fintech adjacent</h3>
+          <div class="desc">3Y CAGR of AI-powered consumer finance products across NA + EU.</div>
+          <div class="bar"><div class="fill" style="width: 68%;"></div></div>
+          <div class="val">38<span style="font-size:44px; color: var(--ink-3);">%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">03</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 04 — SOLUTION ========== -->
+  <section class="s-solution" data-label="Solution">
+    <div class="deck-pad">
+      <div class="headings">
+        <div class="eye" style="margin-bottom: 32px;">The product</div>
+        <h1>One number, <span class="grad">all the context.</span></h1>
+        <p class="lede">Our prediction engine ingests 847 market signals every 60 seconds, cross-references them against 40 years of historical analogs, and outputs a single actionable view: where the index is most likely to be in 1, 5, and 30 days — with explicit confidence intervals.</p>
+      </div>
+
+      <div class="product-viz">
+        <div class="pillars">
+          <div class="pillar">
+            <div class="ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-6"/><path d="M14 6h6v6"/></svg>
+            </div>
+            <div>
+              <div class="title">Probabilistic forecasts</div>
+              <div class="desc">Point estimate with full distribution. Know exactly how confident the model is.</div>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </div>
+            <div>
+              <div class="title">Real-time updates</div>
+              <div class="desc">Predictions refresh every minute during market hours, adapting to breaking data.</div>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 6H21l-5.2 4 2 7-5.8-4-5.8 4 2-7L3 8h6.5z"/></svg>
+            </div>
+            <div>
+              <div class="title">Explainable drivers</div>
+              <div class="desc">Every forecast ships with its top contributing signals — never a black box.</div>
+            </div>
+          </div>
+          <div class="pillar">
+            <div class="ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg>
+            </div>
+            <div>
+              <div class="title">Backtest anything</div>
+              <div class="desc">Replay any hypothesis against 40 years of tick data in under 10 seconds.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-frame">
+          <div class="pf-chrome">
+            <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+            <div class="url">apex500.com / dashboard</div>
+          </div>
+          <div class="pf-body">
+            <div class="pf-head">
+              <span class="title">S&amp;P 500 · Next 5 trading days</span>
+              <span class="pill">● Bullish · 74%</span>
+            </div>
+            <div class="pf-metric">
+              <span class="v">5,264</span>
+              <span class="d">▲ +0.87% <span style="color: var(--ink-3);">vs. today</span></span>
+            </div>
+            <svg class="pf-chart" viewBox="0 0 600 180" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="pfg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.3)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient>
+              </defs>
+              <g stroke="rgba(30,35,48,0.6)" stroke-width="1"><line x1="0" y1="60" x2="600" y2="60"/><line x1="0" y1="120" x2="600" y2="120"/></g>
+              <!-- history -->
+              <path d="M0 130 L40 125 L80 118 L120 108 L160 112 L200 100 L240 95 L280 85 L320 92 L360 78 L400 85 L440 70 L480 78 L500 70" stroke="#EDEDEF" stroke-width="1.8" fill="none"/>
+              <!-- projection CI band -->
+              <path d="M500 70 L540 50 L580 40 L600 32 L600 60 L580 60 L540 70 L500 70 Z" fill="rgba(139, 92, 246,0.14)"/>
+              <!-- projection line -->
+              <path d="M500 70 L540 60 L580 50 L600 42" stroke="#8B5CF6" stroke-width="2.2" stroke-dasharray="6 4" fill="none" style=""/>
+              <!-- vertical divider -->
+              <line x1="500" y1="0" x2="500" y2="180" stroke="#3A3A42" stroke-dasharray="3 3"/>
+              <!-- now marker -->
+              <circle cx="500" cy="70" r="4" fill="#EDEDEF"/>
+              <!-- prediction endpoint -->
+              <circle cx="600" cy="42" r="5" fill="#8B5CF6" style=""/>
+              <text x="508" y="14" fill="#70707A" font-family="JetBrains Mono" font-size="10" letter-spacing="0.05em">TODAY</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">04</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 05 — PROOF ========== -->
+  <section class="s-proof" data-label="Accuracy">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div>
+          <div class="eye" style="margin-bottom: 32px;">Model performance</div>
+          <h1>Outperforming consensus on <span class="hi">72% of trading days.</span></h1>
+        </div>
+        <div class="side-note">Validated on rolling out-of-sample data from Jan 2022 to present. Backtest methodology published at apex500.com/research.</div>
+      </div>
+
+      <div class="proof-grid">
+        <div class="accuracy-chart">
+          <div class="ac-head">
+            <div>
+              <div class="ac-title">Directional accuracy · 5-day forecast horizon</div>
+              <div class="ac-sub">Rolling 90-day window · 2022–2025</div>
+            </div>
+            <div class="leg">
+              <span><span class="sw" style="background:#8B5CF6"></span>Apex 500</span>
+              <span><span class="sw" style="background:#70707A"></span>Analyst consensus</span>
+              <span><span class="sw" style="background:#3A3A42"></span>Coin flip (50%)</span>
+            </div>
+          </div>
+          <svg class="chart" viewBox="0 0 900 380" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="apxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.25)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient>
+            </defs>
+            <!-- gridlines -->
+            <g stroke="rgba(30,35,48,0.6)" stroke-width="1">
+              <line x1="0" y1="76" x2="900" y2="76"/>
+              <line x1="0" y1="152" x2="900" y2="152"/>
+              <line x1="0" y1="228" x2="900" y2="228"/>
+              <line x1="0" y1="304" x2="900" y2="304"/>
+            </g>
+            <!-- y labels -->
+            <g fill="#70707A" font-family="JetBrains Mono" font-size="10" letter-spacing="0.05em">
+              <text x="6" y="72">80%</text>
+              <text x="6" y="148">70%</text>
+              <text x="6" y="224">60%</text>
+              <text x="6" y="300">50%</text>
+            </g>
+            <!-- x labels -->
+            <g fill="#70707A" font-family="JetBrains Mono" font-size="10" letter-spacing="0.05em">
+              <text x="40" y="372">2022</text>
+              <text x="260" y="372">2023</text>
+              <text x="490" y="372">2024</text>
+              <text x="720" y="372">2025</text>
+            </g>
+            <!-- 50% baseline -->
+            <line x1="0" y1="304" x2="900" y2="304" stroke="#3A3A42" stroke-width="1.2" stroke-dasharray="4 4"/>
+            <!-- consensus (gray) -->
+            <path d="M0 260 L60 255 L120 258 L180 252 L240 258 L300 248 L360 252 L420 246 L480 250 L540 244 L600 248 L660 242 L720 246 L780 240 L840 244 L900 238" stroke="#70707A" stroke-width="2" fill="none"/>
+            <!-- Apex area -->
+            <path d="M0 200 L60 185 L120 170 L180 175 L240 155 L300 140 L360 148 L420 125 L480 130 L540 110 L600 118 L660 98 L720 104 L780 88 L840 92 L900 78 L900 380 L0 380 Z" fill="url(#apxg)"/>
+            <!-- Apex line -->
+            <path d="M0 200 L60 185 L120 170 L180 175 L240 155 L300 140 L360 148 L420 125 L480 130 L540 110 L600 118 L660 98 L720 104 L780 88 L840 92 L900 78" stroke="#8B5CF6" stroke-width="2.8" fill="none" style=""/>
+            <!-- endpoint dot -->
+            <circle cx="900" cy="78" r="5" fill="#8B5CF6"/>
+            <circle cx="900" cy="78" r="10" fill="rgba(139, 92, 246,0.2)"/>
+            <!-- annotation -->
+            <g>
+              <line x1="900" y1="78" x2="820" y2="40" stroke="#8B5CF6" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+              <text x="700" y="36" fill="#EDEDEF" font-family="Inter" font-size="14" font-weight="500">Latest: 72.3%</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="proof-side">
+          <div class="proof-metric acc">
+            <div>
+              <div class="lbl">Directional accuracy · 5D</div>
+              <div class="val">72<span class="u">%</span></div>
+            </div>
+            <div class="note">Out-of-sample, rolling 90-day window.</div>
+          </div>
+          <div class="proof-metric pos">
+            <div>
+              <div class="lbl">Sharpe · model signal</div>
+              <div class="val">2.4</div>
+            </div>
+            <div class="note">Long-only, vs. SPX benchmark 0.9.</div>
+          </div>
+          <div class="proof-metric">
+            <div>
+              <div class="lbl">Vs. analyst consensus</div>
+              <div class="val" style="color: var(--ink);">+18<span class="u">pp</span></div>
+            </div>
+            <div class="note">Apex beats Bloomberg consensus by 18 percentage points on directional calls.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">05</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 06 — TRACTION ========== -->
+  <section class="s-traction" data-label="Traction">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div class="eye">Traction · last 12 months</div>
+      </div>
+      <h1>From zero to <span class="grad">$4.2M ARR</span> in 14 months.</h1>
+
+      <div class="traction-main">
+        <div class="growth-chart">
+          <div class="gh-head">
+            <div>
+              <div class="gh-title">Monthly recurring revenue</div>
+              <div class="gh-sub">Mar 2024 → Apr 2025 · 14 months</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="gh-big">$348K</div>
+              <div class="gh-delta">▲ +22.4% MoM</div>
+            </div>
+          </div>
+          <svg class="chart" viewBox="0 0 900 320" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="mrr-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.4)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient>
+            </defs>
+            <g stroke="rgba(30,35,48,0.6)" stroke-width="1">
+              <line x1="0" y1="60" x2="900" y2="60"/>
+              <line x1="0" y1="130" x2="900" y2="130"/>
+              <line x1="0" y1="200" x2="900" y2="200"/>
+              <line x1="0" y1="270" x2="900" y2="270"/>
+            </g>
+            <g fill="#70707A" font-family="JetBrains Mono" font-size="10" letter-spacing="0.05em">
+              <text x="6" y="56">$400K</text>
+              <text x="6" y="126">$300K</text>
+              <text x="6" y="196">$200K</text>
+              <text x="6" y="266">$100K</text>
+            </g>
+            <g fill="#70707A" font-family="JetBrains Mono" font-size="10" letter-spacing="0.05em">
+              <text x="60" y="312">Mar 24</text>
+              <text x="240" y="312">Jun 24</text>
+              <text x="420" y="312">Sep 24</text>
+              <text x="600" y="312">Dec 24</text>
+              <text x="780" y="312">Apr 25</text>
+            </g>
+            <!-- bars -->
+            <g fill="#8B5CF6">
+              <rect x="55" y="290" width="30" height="10" rx="2" opacity="0.6"/>
+              <rect x="115" y="284" width="30" height="16" rx="2" opacity="0.65"/>
+              <rect x="175" y="275" width="30" height="25" rx="2" opacity="0.7"/>
+              <rect x="235" y="262" width="30" height="38" rx="2" opacity="0.75"/>
+              <rect x="295" y="248" width="30" height="52" rx="2" opacity="0.8"/>
+              <rect x="355" y="228" width="30" height="72" rx="2" opacity="0.82"/>
+              <rect x="415" y="202" width="30" height="98" rx="2" opacity="0.85"/>
+              <rect x="475" y="174" width="30" height="126" rx="2" opacity="0.88"/>
+              <rect x="535" y="140" width="30" height="160" rx="2" opacity="0.9"/>
+              <rect x="595" y="110" width="30" height="190" rx="2" opacity="0.92"/>
+              <rect x="655" y="88" width="30" height="212" rx="2" opacity="0.94"/>
+              <rect x="715" y="66" width="30" height="234" rx="2" opacity="0.96"/>
+              <rect x="775" y="48" width="30" height="252" rx="2" opacity="0.98"/>
+              <rect x="835" y="30" width="30" height="270" rx="2" style=""/>
+            </g>
+            <!-- trend line -->
+            <path d="M70 295 L130 292 L190 287 L250 280 L310 274 L370 264 L430 251 L490 236 L550 220 L610 205 L670 194 L730 183 L790 170 L850 40" stroke="#C4B5FD" stroke-width="1.6" stroke-dasharray="4 3" fill="none" opacity="0.7"/>
+          </svg>
+        </div>
+
+        <div class="traction-side">
+          <div class="ts-card">
+            <div class="lbl">Paying users</div>
+            <div class="val">12,847</div>
+            <div class="delta">▲ +28% MoM</div>
+          </div>
+          <div class="ts-card">
+            <div class="lbl">Net revenue retention</div>
+            <div class="val">134<span style="font-size:28px; color: var(--ink-3);">%</span></div>
+            <div class="delta">Best-in-class SaaS</div>
+          </div>
+          <div class="ts-card">
+            <div class="lbl">Gross margin</div>
+            <div class="val">87<span style="font-size:28px; color: var(--ink-3);">%</span></div>
+            <div class="delta">Software economics</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">06</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 07 — BUSINESS MODEL ========== -->
+  <section class="s-model" data-label="Business model">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div class="eye">Business model</div>
+      </div>
+      <h1>SaaS, three tiers. ACV weighted to the middle.</h1>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="name">Tier · Starter</div>
+          <div class="tier-head">For the curious retail trader</div>
+          <div class="price"><span class="amt">$29</span><span class="per">/mo</span></div>
+          <ul>
+            <li>Daily S&amp;P 500 prediction</li>
+            <li>5-day forecast horizon</li>
+            <li>Basic confidence intervals</li>
+            <li>Web dashboard</li>
+          </ul>
+          <div class="econ"><span>4,820 users</span><span class="v">38% of ARR</span></div>
+        </div>
+        <div class="price-card featured">
+          <div class="name">Tier · Pro</div>
+          <div class="tier-head">For the active trader</div>
+          <div class="price"><span class="amt">$99</span><span class="per">/mo</span></div>
+          <ul>
+            <li>Real-time predictions · 1 min refresh</li>
+            <li>1D / 5D / 30D horizons</li>
+            <li>Full driver attribution</li>
+            <li>Backtesting engine</li>
+            <li>API access · 10k calls / day</li>
+          </ul>
+          <div class="econ"><span>7,640 users</span><span class="v">54% of ARR</span></div>
+        </div>
+        <div class="price-card">
+          <div class="name">Tier · Quant</div>
+          <div class="tier-head">For funds &amp; prop desks</div>
+          <div class="price"><span class="amt">$2,400</span><span class="per">/mo</span></div>
+          <ul>
+            <li>Raw model feed · WebSocket</li>
+            <li>Unlimited API · tick data</li>
+            <li>Custom model fine-tuning</li>
+            <li>Dedicated support + SLA</li>
+          </ul>
+          <div class="econ"><span>387 seats</span><span class="v">8% of ARR</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">07</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 08 — TEAM ========== -->
+  <section class="s-team" data-label="Team">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div class="eye">Founding team</div>
+      </div>
+      <h1>Built by practitioners who ran the books.</h1>
+
+      <div class="team-grid">
+        <div class="person">
+          <div class="avatar">MK</div>
+          <div>
+            <div class="role">CEO · Co-founder</div>
+            <div class="name" style="margin-top: 4px;">Maya Kapoor</div>
+          </div>
+          <div class="bio">11 years building quant models. Led volatility desk at a multi-strat fund. MS, Statistics, Stanford.</div>
+          <div class="prior">Prior · Two Sigma · Stanford</div>
+        </div>
+        <div class="person b">
+          <div class="avatar">DL</div>
+          <div>
+            <div class="role">CTO · Co-founder</div>
+            <div class="name" style="margin-top: 4px;">Daniel Lao</div>
+          </div>
+          <div class="bio">Shipped ML infra for billions of daily predictions. Former staff engineer, real-time systems.</div>
+          <div class="prior">Prior · Meta · MIT</div>
+        </div>
+        <div class="person c">
+          <div class="avatar">SR</div>
+          <div>
+            <div class="role">Head of Research</div>
+            <div class="name" style="margin-top: 4px;">Dr. Sofia Reyes</div>
+          </div>
+          <div class="bio">PhD Financial Engineering. Published on regime detection &amp; non-stationary signals.</div>
+          <div class="prior">Prior · Citadel · Princeton</div>
+        </div>
+        <div class="person d">
+          <div class="avatar">JO</div>
+          <div>
+            <div class="role">Head of Product</div>
+            <div class="name" style="margin-top: 4px;">Jordan Okafor</div>
+          </div>
+          <div class="bio">Led product at a consumer fintech through 0→10M users. Design-minded, data-native.</div>
+          <div class="prior">Prior · Robinhood · Stripe</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">08</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 09 — ASK ========== -->
+  <section class="s-ask" data-label="The ask">
+    <div class="deck-pad">
+      <div class="hdr">
+        <div class="eye">The ask</div>
+      </div>
+
+      <div class="ask-layout">
+        <div>
+          <h1>Raising <span class="grad">$12M</span><br>Series A.</h1>
+          <div class="ask-big" style="margin-top: 48px;">
+            <div class="lbl">Round · led, closing Q3 2025</div>
+            <div class="v"><span class="cur">$</span>12M</div>
+            <div class="round">$72M post-money · 2 institutional leads committed · seeking 1 strategic</div>
+          </div>
+        </div>
+
+        <div class="use-list">
+          <div class="lbl">Use of funds · 18 month runway</div>
+          <div class="use-item">
+            <span class="pct">45%</span>
+            <div style="flex: 1;">
+              <div class="lbl2">Model research</div>
+              <div class="desc">6 ML researchers · GPU infra · alt-data</div>
+            </div>
+            <div class="bar"><div class="fill" style="width: 90%;"></div></div>
+          </div>
+          <div class="use-item">
+            <span class="pct">30%</span>
+            <div style="flex: 1;">
+              <div class="lbl2">Go-to-market</div>
+              <div class="desc">Prosumer growth · enterprise sales</div>
+            </div>
+            <div class="bar"><div class="fill" style="width: 60%;"></div></div>
+          </div>
+          <div class="use-item">
+            <span class="pct">20%</span>
+            <div style="flex: 1;">
+              <div class="lbl2">International</div>
+              <div class="desc">EU launch · multi-region data</div>
+            </div>
+            <div class="bar"><div class="fill" style="width: 40%;"></div></div>
+          </div>
+          <div class="use-item">
+            <span class="pct">5%</span>
+            <div style="flex: 1;">
+              <div class="lbl2">G&amp;A</div>
+              <div class="desc">Compliance · legal · finance</div>
+            </div>
+            <div class="bar"><div class="fill" style="width: 10%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">
+      <span class="logo-mini"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg> Apex 500</span>
+      <span class="page-num"><span class="cur">09</span><span class="sep">/</span>10</span>
+    </div>
+  </section>
+
+  <!-- ========== 10 — CLOSING ========== -->
+  <section class="s-close" data-label="Thank you">
+    <div class="grid-bg"></div>
+    <div class="deck-pad">
+      <div class="topbar">
+        <div class="logo">
+          <div class="mark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+          </div>
+          Apex 500
+        </div>
+        <span class="mono">Let's talk.</span>
+      </div>
+
+      <div class="big">
+        <div class="eyebrow"><span class="ln"></span>Thank you<span class="ln"></span></div>
+        <h1>Let's make<br>markets <span class="grad">legible.</span></h1>
+        <div class="contact">
+          <a href="mailto:invest@apex500.com">invest@apex500.com</a>
+          <span class="sep"></span>
+          <span>apex500.com / investors</span>
+          <span class="sep"></span>
+          <span>San Francisco · New York</span>
+        </div>
+      </div>
+
+      <div class="sig">
+        <span>Maya Kapoor · CEO &amp; Co-founder</span>
+        <span class="page-num"><span class="cur">10</span><span class="sep">/</span>10</span>
+      </div>
+    </div>
+  </section>
+
+</deck-stage>
+
+</body>
+</html>

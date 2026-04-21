@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex 500 — Welcome</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body { margin: 0; min-height: 100vh; background: var(--bg-canvas); overflow: hidden; }
+  .stage { position: fixed; inset: 0; display: grid; grid-template-columns: 1fr 1fr; }
+
+  /* === LEFT — BRAND PANEL === */
+  .brand-pane {
+    position: relative; overflow: hidden;
+    background: radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246,0.18) 0%, transparent 60%), var(--bg-canvas);
+    padding: 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border-right: 1px solid var(--border-subtle);
+  }
+  .brand-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(139, 92, 246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at 30% 50%, black 20%, transparent 80%);
+    pointer-events: none;
+  }
+  .brand-logo { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600; letter-spacing:-0.01em; z-index:2; position:relative; color: var(--fg-primary); }
+  .brand-logo .mono { font-family: var(--font-mono); color: var(--accent-primary); }
+
+  /* Floating 3D prediction cube */
+  .cube-stage { position: absolute; left:50%; top:50%; transform: translate(-50%, -55%); perspective: 1400px; z-index:1; }
+  .cube { position: relative; width: 320px; height: 320px; transform-style: preserve-3d; animation: spin-cube 18s linear infinite; }
+  @keyframes spin-cube {
+    0%   { transform: rotateX(-22deg) rotateY(0deg); }
+    100% { transform: rotateX(-22deg) rotateY(360deg); }
+  }
+  .face {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(14,17,24,0.95), rgba(22,26,36,0.85));
+    border: 1px solid rgba(139, 92, 246,0.28);
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(139, 92, 246,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+    padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .f-front  { transform: translateZ(160px); }
+  .f-back   { transform: rotateY(180deg) translateZ(160px); }
+  .f-right  { transform: rotateY(90deg)  translateZ(160px); }
+  .f-left   { transform: rotateY(-90deg) translateZ(160px); }
+  .f-top    { transform: rotateX(90deg)  translateZ(160px); }
+  .f-bottom { transform: rotateX(-90deg) translateZ(160px); }
+
+  .face .tick { font-family: var(--font-mono); font-size: 10px; color: var(--fg-tertiary); letter-spacing: 0.04em; text-transform: uppercase; }
+  .face .big  { font-family: var(--font-mono); font-size: 26px; font-weight: 500; color: var(--fg-primary); margin-top:6px; font-variant-numeric: tabular-nums; }
+  .face .d-pos { color: var(--pos); font-family: var(--font-mono); font-size: 12px; margin-top:4px; }
+  .face .d-neg { color: var(--neg); font-family: var(--font-mono); font-size: 12px; margin-top:4px; }
+
+  .spark { width:100%; height: 80px; margin-top: 14px; }
+
+  /* ambient glow blob */
+  .aura {
+    position: absolute; left: 50%; top: 50%;
+    width: 600px; height: 600px; margin-left: -300px; margin-top: -300px;
+    background: radial-gradient(circle, rgba(139, 92, 246,0.25) 0%, transparent 60%);
+    filter: blur(40px); animation: pulse-slow 6s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes pulse-slow { 0%,100% { opacity:.7; transform: scale(1);} 50% { opacity:1; transform:scale(1.1);} }
+
+  .brand-quote { position: relative; z-index: 2; max-width: 440px; }
+  .brand-quote h2 { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.25; color: var(--fg-primary); margin-bottom: 12px; }
+  .brand-quote h2 .accent { background: linear-gradient(90deg,#8B5CF6,#38BDF8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand-quote p { font-size: 13px; color: var(--fg-tertiary); }
+
+  /* === RIGHT — FORM PANE === */
+  .form-pane {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 48px; background: var(--bg-canvas);
+    position: relative;
+  }
+  .step-dots { position: absolute; top: 40px; right: 48px; display: flex; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); align-items: center; }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); transition: all 300ms var(--ease-out); }
+  .step-dot.active { background: var(--accent-primary); box-shadow: 0 0 8px rgba(139, 92, 246,0.7); width: 24px; border-radius: 3px; }
+  .step-dot.done { background: var(--pos); }
+
+  .form-card {
+    width: 100%; max-width: 420px;
+    animation: slide-in 500ms var(--ease-out);
+  }
+  @keyframes slide-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .step-eyebrow { font-size: 11px; color: var(--accent-primary); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  .form-card h1 { font-size: 34px; font-weight: 600; letter-spacing: -0.02em; color: var(--fg-primary); margin-bottom: 8px; line-height: 1.1; }
+  .form-card p.sub { font-size: 14px; color: var(--fg-secondary); line-height: 1.55; margin-bottom: 32px; max-width: 360px; }
+
+  /* Inputs */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--fg-secondary); margin-bottom: 6px; font-weight: 500; }
+  .field input {
+    width: 100%; background: var(--bg-surface); border: 1px solid var(--border-default);
+    color: var(--fg-primary); font-family: var(--font-sans); font-size: 14px;
+    padding: 11px 14px; border-radius: var(--radius-sm); outline: none; transition: all 180ms;
+  }
+  .field input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(139, 92, 246,0.18); }
+  .field input::placeholder { color: var(--fg-tertiary); }
+
+  .btn {
+    background: var(--accent-primary); color: white;
+    width: 100%; padding: 12px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 200ms var(--ease-out);
+    margin-top: 6px;
+  }
+  .btn:hover { background: var(--accent-hover); box-shadow: 0 8px 24px rgba(139, 92, 246,0.35); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-g { background: var(--bg-surface); color: var(--fg-primary); border: 1px solid var(--border-default); }
+  .btn-g:hover { background: var(--bg-elevated); box-shadow: none; }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--fg-tertiary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+
+  .ssob { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ssob button { display:flex; align-items:center; justify-content:center; gap: 10px; padding: 11px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--fg-primary); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 180ms; }
+  .ssob button:hover { background: var(--bg-elevated); }
+
+  .small { font-size: 12px; color: var(--fg-tertiary); text-align: center; margin-top: 18px; }
+  .small a { color: var(--fg-secondary); }
+  .small a:hover { color: var(--accent-primary); }
+
+  /* === Risk cards === */
+  .risk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .risk {
+    background: var(--bg-surface); border: 1px solid var(--border-default);
+    border-radius: var(--radius-md); padding: 18px; cursor: pointer;
+    transition: all 200ms var(--ease-out); position: relative; overflow: hidden;
+  }
+  .risk:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .risk.sel { border-color: var(--accent-primary); background: var(--accent-softer); box-shadow: 0 0 0 1px var(--accent-primary), 0 0 24px rgba(139, 92, 246,0.25); }
+  .risk .r-ico { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-elevated); display: grid; place-items: center; margin-bottom: 10px; color: var(--fg-secondary); }
+  .risk.sel .r-ico { background: var(--accent-soft); color: var(--accent-primary); }
+  .risk h4 { font-size: 13px; font-weight: 600; color: var(--fg-primary); margin-bottom: 4px; }
+  .risk p { font-size: 11px; color: var(--fg-tertiary); line-height: 1.4; }
+
+  /* interest chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .chip {
+    padding: 8px 14px; background: var(--bg-surface); border: 1px solid var(--border-default);
+    border-radius: 999px; font-size: 13px; color: var(--fg-secondary); cursor: pointer;
+    transition: all 180ms;
+  }
+  .chip:hover { color: var(--fg-primary); border-color: var(--border-strong); }
+  .chip.sel { background: var(--accent-soft); color: var(--accent-primary); border-color: var(--accent-primary); }
+
+  /* Success celebration */
+  .success-ring { position: relative; width: 80px; height: 80px; margin: 0 auto 20px; }
+  .success-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .success-ring .cb { fill: none; stroke: var(--pos); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 230; stroke-dashoffset: 230; animation: draw 800ms var(--ease-out) 200ms forwards; }
+  .success-ring .tk { fill: none; stroke: var(--pos); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 400ms var(--ease-out) 800ms forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .success-ring::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 40px rgba(34, 197, 94,0.5); opacity: 0; animation: ring-pulse 2s ease-out 1s infinite; }
+  @keyframes ring-pulse { 0% { opacity:0.8; transform: scale(1);} 100% { opacity:0; transform: scale(1.4);} }
+
+  .back-btn { font-size: 12px; color: var(--fg-tertiary); background: none; border: none; cursor: pointer; margin-top: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;}
+  .back-btn:hover { color: var(--fg-primary); }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- LEFT — brand visual -->
+  <div class="brand-pane">
+    <div class="brand-grid"></div>
+    <div class="aura"></div>
+
+    <div class="brand-logo">
+      <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+        <defs><linearGradient id="bl" x1="6" y1="30" x2="34" y2="10"><stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#818CF8"/></linearGradient></defs>
+        <line x1="14" y1="32" x2="14" y2="8" stroke="#EDEDEF" stroke-width="1.5" opacity="0.55"/>
+        <line x1="14" y1="22" x2="26" y2="22" stroke="#EDEDEF" stroke-width="1.5" opacity="0.55"/>
+        <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#bl)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+      </svg>
+      Apex <span class="mono">500</span>
+    </div>
+
+    <!-- 3D spinning prediction cube -->
+    <div class="cube-stage">
+      <div class="cube">
+        <div class="face f-front">
+          <div class="tick">SPX · NEXT 5D</div>
+          <div class="big">5,264.10</div>
+          <div class="d-pos">▲ +0.87% · 72%</div>
+          <svg class="spark" viewBox="0 0 240 80" preserveAspectRatio="none">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.5)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient></defs>
+            <path d="M0 60 L30 55 L60 50 L90 40 L120 44 L150 32 L180 28 L210 18 L240 12 L240 80 L0 80Z" fill="url(#g1)"/>
+            <path d="M0 60 L30 55 L60 50 L90 40 L120 44 L150 32 L180 28 L210 18 L240 12" stroke="#8B5CF6" stroke-width="1.5" fill="none"/>
+          </svg>
+        </div>
+        <div class="face f-back">
+          <div class="tick">LSTM · CONF</div>
+          <div class="big">72%</div>
+          <div style="margin-top:12px; font-size:11px; color:var(--fg-tertiary); line-height:1.5">Ensemble of 3 models agreed on direction. Volatility within normal band.</div>
+        </div>
+        <div class="face f-right">
+          <div class="tick">SECTOR HEAT</div>
+          <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:3px; margin-top:12px">
+            <div style="height:28px; background:rgba(244, 63, 94,.6); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLK</div>
+            <div style="height:28px; background:rgba(34, 197, 94,.6); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLF</div>
+            <div style="height:28px; background:rgba(34, 197, 94,.8); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLE</div>
+            <div style="height:28px; background:rgba(30,35,48,.9); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:#A1A1AA; padding:3px">XLV</div>
+            <div style="height:28px; background:rgba(244, 63, 94,.4); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLY</div>
+            <div style="height:28px; background:rgba(34, 197, 94,.4); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLI</div>
+            <div style="height:28px; background:rgba(244, 63, 94,.3); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLP</div>
+            <div style="height:28px; background:rgba(34, 197, 94,.7); border-radius:3px; font-family:var(--font-mono); font-size:9px; color:white; padding:3px">XLU</div>
+          </div>
+        </div>
+        <div class="face f-left">
+          <div class="tick">VOLATILITY</div>
+          <div class="big">14.2</div>
+          <div class="d-neg">▼ VIX −1.8%</div>
+          <svg class="spark" viewBox="0 0 240 80" preserveAspectRatio="none">
+            <path d="M0 30 L30 40 L60 35 L90 50 L120 42 L150 58 L180 52 L210 65 L240 60" stroke="#EAB308" stroke-width="1.5" fill="none"/>
+          </svg>
+        </div>
+        <div class="face f-top">
+          <div class="tick">EQUAL WEIGHT</div>
+          <div class="big">5,192.34</div>
+          <div class="d-pos">▲ +0.42%</div>
+        </div>
+        <div class="face f-bottom">
+          <div class="tick">MACRO SIGNALS</div>
+          <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--fg-secondary)">
+            <div>CPI trend — <span style="color:var(--pos)">cooling</span></div>
+            <div>Fed stance — <span style="color:var(--warn)">hawkish</span></div>
+            <div>USD — <span style="color:var(--fg-tertiary)">neutral</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-quote">
+      <h2>“The call with <span class="accent">its math attached.</span>”</h2>
+      <p>— The way modern analysts work</p>
+    </div>
+  </div>
+
+  <!-- RIGHT — multi-step form -->
+  <div class="form-pane">
+    <div class="step-dots">
+      <span id="dot0" class="step-dot active"></span>
+      <span id="dot1" class="step-dot"></span>
+      <span id="dot2" class="step-dot"></span>
+      <span id="dot3" class="step-dot"></span>
+      <span id="dot4" class="step-dot"></span>
+    </div>
+
+    <!-- STEP 0: sign up -->
+    <div class="form-card" id="step0">
+      <div class="step-eyebrow">Get started</div>
+      <h1>Create your<br>Apex account.</h1>
+      <p class="sub">Free for 14 days. No credit card. Cancel anytime.</p>
+
+      <div class="ssob">
+        <button><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.6h5.08c-.22 1.14-.87 2.1-1.85 2.76v2.3h2.99c1.75-1.6 2.76-3.97 2.76-6.82 0-.67-.06-1.32-.17-1.94H12z"/><path fill="#34A853" d="M12 22c2.5 0 4.6-.83 6.14-2.24l-2.99-2.3c-.83.56-1.9.9-3.15.9-2.42 0-4.47-1.63-5.2-3.82H3.7v2.38A9.99 9.99 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.8 14.54a6 6 0 0 1 0-3.08V9.08H3.7a10 10 0 0 0 0 8.84l3.1-3.38z"/><path fill="#4285F4" d="M12 5.95c1.36 0 2.58.47 3.54 1.39l2.65-2.65C16.6 3.2 14.5 2.4 12 2.4 8.15 2.4 4.8 4.5 3.7 7.6l3.1 2.38c.73-2.2 2.78-3.82 5.2-3.82z"/></svg>Google</button>
+        <button><svg width="16" height="16" viewBox="0 0 24 24" fill="#EDEDEF"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.196-2.98.793-.9 2.087-1.57 3.211-1.61.015.13.027.28.027.36zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.793-6.55 5.54-6.55 1.497 0 2.747.98 3.69.98.91 0 2.31-1.04 3.91-1.04.61 0 2.75.06 4.12 2.07-.08.05-2.36 1.39-2.36 4.25 0 3.54 3.07 4.78 3.09 4.79z"/></svg>Apple</button>
+      </div>
+
+      <div class="divider">or with email</div>
+
+      <div class="field"><label>Work email</label><input type="email" id="email" placeholder="you@firm.com"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="8+ characters"></div>
+      <button class="btn" onclick="goStep(1)">Create account
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <div class="small">Already have an account? <a>Sign in</a></div>
+    </div>
+
+    <!-- STEP 1: profile -->
+    <div class="form-card hidden" id="step1">
+      <div class="step-eyebrow">Step 2 of 5</div>
+      <h1>Tell us about you.</h1>
+      <p class="sub">We'll tailor the dashboard to your role. You can change any of this later.</p>
+
+      <div class="field"><label>Full name</label><input placeholder="Jane Richards"></div>
+      <div class="field"><label>Role</label><input placeholder="Portfolio analyst"></div>
+      <div class="field"><label>Organization (optional)</label><input placeholder="Meridian Funds"></div>
+
+      <button class="btn" onclick="goStep(2)">Continue</button>
+      <button class="back-btn" onclick="goStep(0)">← Back</button>
+    </div>
+
+    <!-- STEP 2: risk profile -->
+    <div class="form-card hidden" id="step2">
+      <div class="step-eyebrow">Step 3 of 5</div>
+      <h1>Pick a risk profile.</h1>
+      <p class="sub">Drives how aggressively we weight short-term signals and how we show confidence bands.</p>
+
+      <div class="risk-grid">
+        <div class="risk" data-r="conservative" onclick="pickRisk(this)">
+          <div class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <h4>Conservative</h4>
+          <p>Longer horizons. Wider bands. Downside-aware.</p>
+        </div>
+        <div class="risk sel" data-r="moderate" onclick="pickRisk(this)">
+          <div class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg></div>
+          <h4>Moderate</h4>
+          <p>Balanced weights. Default for most users.</p>
+        </div>
+        <div class="risk" data-r="aggressive" onclick="pickRisk(this)">
+          <div class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <h4>Aggressive</h4>
+          <p>Short horizons. Tighter bands. Signal-heavy.</p>
+        </div>
+      </div>
+
+      <button class="btn" onclick="goStep(3)">Continue</button>
+      <button class="back-btn" onclick="goStep(1)">← Back</button>
+    </div>
+
+    <!-- STEP 3: interests -->
+    <div class="form-card hidden" id="step3">
+      <div class="step-eyebrow">Step 4 of 5</div>
+      <h1>What do you watch?</h1>
+      <p class="sub">Pick any. We'll prioritize these sectors in insights and alerts.</p>
+
+      <div class="chips" id="chips">
+        <div class="chip sel" onclick="toggleChip(this)">Technology</div>
+        <div class="chip sel" onclick="toggleChip(this)">Financials</div>
+        <div class="chip" onclick="toggleChip(this)">Energy</div>
+        <div class="chip" onclick="toggleChip(this)">Healthcare</div>
+        <div class="chip sel" onclick="toggleChip(this)">Consumer</div>
+        <div class="chip" onclick="toggleChip(this)">Industrials</div>
+        <div class="chip" onclick="toggleChip(this)">Utilities</div>
+        <div class="chip" onclick="toggleChip(this)">Real Estate</div>
+        <div class="chip" onclick="toggleChip(this)">Materials</div>
+        <div class="chip" onclick="toggleChip(this)">Communications</div>
+        <div class="chip" onclick="toggleChip(this)">Staples</div>
+        <div class="chip" onclick="toggleChip(this)">VIX / Vol</div>
+        <div class="chip" onclick="toggleChip(this)">Macro / Fed</div>
+      </div>
+
+      <button class="btn" onclick="goStep(4)">Continue</button>
+      <button class="back-btn" onclick="goStep(2)">← Back</button>
+    </div>
+
+    <!-- STEP 4: success -->
+    <div class="form-card hidden" id="step4" style="text-align:center">
+      <div class="success-ring">
+        <svg viewBox="0 0 80 80"><circle class="cb" cx="40" cy="40" r="36"/><path class="tk" d="M25 42 L36 53 L56 30"/></svg>
+      </div>
+      <div class="step-eyebrow" style="text-align:center">You're in</div>
+      <h1 style="text-align:center">Welcome to Apex.</h1>
+      <p class="sub" style="margin-left:auto; margin-right:auto; text-align:center">Your dashboard is ready. The first-day forecast is already computed and waiting.</p>
+
+      <button class="btn" onclick="window.location.href='../dashboard/index.html'">Go to dashboard
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <div class="small">Need a tour? <a>Start the 90-sec walkthrough</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let cur = 0;
+  function goStep(n) {
+    document.getElementById('step'+cur).classList.add('hidden');
+    document.getElementById('step'+n).classList.remove('hidden');
+    for (let i = 0; i < 5; i++) {
+      const d = document.getElementById('dot'+i);
+      d.classList.remove('active','done');
+      if (i < n) d.classList.add('done');
+      else if (i === n) d.classList.add('active');
+    }
+    cur = n;
+  }
+  function pickRisk(el) {
+    document.querySelectorAll('.risk').forEach(r => r.classList.remove('sel'));
+    el.classList.add('sel');
+  }
+  function toggleChip(el) {
+    el.classList.toggle('sel');
+  }
+</script>
+</body>
+</html>

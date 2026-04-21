@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  
+  <defs>
+    <linearGradient id="apex-line" x1="6" y1="30" x2="34" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366F1"></stop>
+      <stop offset="100%" stop-color="#818CF8"></stop>
+    </linearGradient>
+  </defs>
+  
+  <line x1="6" y1="30" x2="34" y2="30" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.35"></line>
+  
+  <line x1="14" y1="32" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.55"></line>
+  
+  <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.55"></line>
+  
+  <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#apex-line)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  
+  <circle cx="34" cy="8" r="2.5" fill="#6366F1"></circle>
+  <circle cx="34" cy="8" r="5" fill="#6366F1" opacity="0.25"></circle>
+</svg>

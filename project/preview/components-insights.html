@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .head { display: flex; align-items: center; gap: 8px; }
+  .spark { width: 10px; height: 10px; fill: #8B5CF6; }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: #A78BFA; font-weight: 600; }
+  .insight { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+  .insight:last-child { border-bottom: none; padding-bottom: 0; }
+  .rule { width: 3px; border-radius: 2px; background: var(--accent-primary); box-shadow: 0 0 8px rgba(139, 92, 246,0.4); flex-shrink: 0; }
+  .rule.pos { background: #22C55E; box-shadow: 0 0 8px rgba(34, 197, 94,0.4); }
+  .rule.warn { background: #EAB308; box-shadow: 0 0 8px rgba(234, 179, 8,0.4); }
+  .body { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+  .title { font-size: 13px; color: var(--fg-primary); font-weight: 500; line-height: 1.4; }
+  .sub { font-size: 12px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <svg class="spark" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 008.5 14.063l-6.135-1.582a.5.5 0 010-.962L8.5 9.936A2 2 0 009.937 8.5l1.582-6.135a.5.5 0 01.963 0L14.063 8.5A2 2 0 0015.5 9.937l6.135 1.581a.5.5 0 010 .964L15.5 14.063a2 2 0 00-1.437 1.437l-1.582 6.135a.5.5 0 01-.963 0z"/></svg>
+      <span class="label">Insights · generated 2 min ago</span>
+    </div>
+    <div class="insight">
+      <div class="rule pos"></div>
+      <div class="body">
+        <span class="title">Tech sector momentum likely to carry the index higher into next session.</span>
+        <span class="sub">XLK +1.4% · 3 megacaps beat · 0.71 conf</span>
+      </div>
+    </div>
+    <div class="insight">
+      <div class="rule warn"></div>
+      <div class="body">
+        <span class="title">Unusual volume on XLF — 2.4× the 20-day average.</span>
+        <span class="sub">Flagged anomaly · watch regional banks</span>
+      </div>
+    </div>
+    <div class="insight">
+      <div class="rule"></div>
+      <div class="body">
+        <span class="title">VIX rising but still below the 30 threshold — no regime shift yet.</span>
+        <span class="sub">VIX 24.3 → 24.8 intraday</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

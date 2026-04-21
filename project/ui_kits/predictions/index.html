@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Apex 500 — Predictions</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body { background: var(--bg-canvas); display: flex; }
+
+  /* ---------- Sidebar ---------- */
+  .side { width: 240px; flex-shrink: 0; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; background: var(--bg-canvas); }
+  .side .logo { height: 56px; display: flex; align-items: center; padding: 0 16px; gap: 10px; border-bottom: 1px solid var(--border-subtle); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-primary); background: linear-gradient(180deg, var(--purple-tint-2) 0%, transparent 100%); }
+  .side .logo .num { font-family: var(--font-mono); color: var(--accent-primary); }
+  .side nav { padding: 8px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .side nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); font-size: 13px; color: var(--fg-secondary); text-decoration: none; position: relative; }
+  .side nav a:hover { background: var(--bg-elevated); color: var(--fg-primary); }
+  .side nav a.active { color: var(--fg-primary); background: linear-gradient(90deg, var(--purple-deep) 0%, var(--bg-elevated) 100%); border: 1px solid var(--purple-border); }
+  .side nav a.active::before { content: ''; position: absolute; left: -1px; top: 7px; bottom: 7px; width: 2px; background: var(--accent-primary); border-radius: 2px; }
+  .side nav a .kbd { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--fg-tertiary); padding: 1px 5px; background: var(--bg-overlay); border: 1px solid var(--border-subtle); border-radius: 3px; }
+  .side nav .group { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); padding: 14px 10px 4px; font-weight: 500; }
+
+  /* ---------- Topbar ---------- */
+  .app { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .top { height: 56px; display: flex; align-items: center; padding: 0 20px; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .top .crumb { font-size: 13px; color: var(--fg-secondary); display: flex; align-items: center; gap: 8px; }
+  .top .crumb strong { color: var(--fg-primary); font-weight: 500; }
+  .top .sep { color: var(--fg-quaternary); }
+  .top .search { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--fg-tertiary); font-size: 12px; min-width: 240px; }
+  .top .search .kbd { margin-left: auto; font-family: var(--font-mono); font-size: 10px; padding: 1px 5px; background: var(--bg-overlay); border: 1px solid var(--border-subtle); border-radius: 3px; color: var(--fg-secondary); }
+  .top .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border-subtle); display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); }
+
+  /* ---------- Main ---------- */
+  main { flex: 1; overflow: auto; padding: 28px; display: flex; flex-direction: column; gap: 24px; }
+
+  /* Page header */
+  .phead { display: flex; justify-content: space-between; align-items: end; }
+  .phead h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .phead p { color: var(--fg-secondary); font-size: 14px; }
+  .phead .actions { display: flex; gap: 8px; }
+  .btn { font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 7px; cursor: pointer; border: 1px solid var(--border-default); background: var(--bg-elevated); color: var(--fg-primary); }
+  .btn.primary { background: var(--accent-primary); color: white; border-color: transparent; }
+
+  /* Filter bar */
+  .filterbar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: linear-gradient(90deg, var(--purple-tint-1), var(--bg-surface) 50%); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .seg { display: inline-flex; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 2px; }
+  .seg button { background: transparent; border: none; padding: 5px 12px; font-size: 12px; color: var(--fg-secondary); cursor: pointer; font-family: var(--font-sans); border-radius: 6px; font-weight: 500; }
+  .seg button.on { background: var(--purple-deep); color: #E9E4FE; border: 1px solid var(--purple-border); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .filterbar .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--fg-tertiary); font-weight: 500; }
+  .filterbar .spacer { flex: 1; }
+  .filterbar .meta { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+
+  /* Hero banner — deep purple tinted surface */
+  .hero { 
+    background: 
+      radial-gradient(ellipse at top right, rgba(139, 92, 246, 0.12) 0%, transparent 55%),
+      linear-gradient(135deg, var(--purple-deep) 0%, #15101E 50%, var(--bg-surface) 100%);
+    border: 1px solid var(--purple-border); 
+    border-radius: var(--radius-lg); 
+    padding: 32px; 
+    display: grid; 
+    grid-template-columns: 1fr 1.3fr; 
+    gap: 40px; 
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(139, 92, 246, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse at 70% 50%, black 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .hero .l .eye { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 14px; }
+  .hero .l .eye::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary); }
+  .hero .l h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .hero .l .sub { color: var(--fg-secondary); font-size: 13px; line-height: 1.55; max-width: 420px; }
+  .hero .r { display: flex; gap: 24px; align-items: end; }
+  .hero .r .slot { display: flex; flex-direction: column; gap: 4px; }
+  .hero .r .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); font-weight: 500; }
+  .hero .r .val { font-family: var(--font-mono); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .hero .r .delta { font-family: var(--font-mono); font-size: 12px; color: var(--pos); }
+  .hero .r .chart { flex: 1; max-width: 280px; height: 80px; }
+
+  /* Predictions table */
+  .table-wrap { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+  .thead, .trow { display: grid; grid-template-columns: 90px 1fr 140px 140px 160px 110px 100px 70px; align-items: center; gap: 14px; padding: 14px 18px; }
+  .thead { background: linear-gradient(180deg, var(--purple-tint-2), var(--bg-elevated)); font-size: 11px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--fg-tertiary); font-weight: 500; border-bottom: 1px solid var(--purple-border); }
+  .thead .sortable { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  .trow { border-bottom: 1px solid var(--border-subtle); font-size: 13px; transition: background var(--dur-fast) var(--ease-out); cursor: pointer; }
+  .trow:last-child { border-bottom: none; }
+  .trow:hover { background: linear-gradient(90deg, var(--purple-tint-2), var(--bg-elevated)); }
+
+  .horizon { font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; border-radius: 4px; background: var(--purple-deep); color: #C4B5FD; border: 1px solid var(--purple-border); display: inline-block; font-weight: 500; }
+  .target-asset { display: flex; align-items: center; gap: 10px; }
+  .target-asset .ticker { font-family: var(--font-mono); font-weight: 600; color: var(--fg-primary); font-size: 13px; }
+  .target-asset .name { color: var(--fg-tertiary); font-size: 12px; }
+  .pred-val { font-family: var(--font-mono); font-weight: 500; color: var(--fg-primary); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .pred-val small { font-size: 11px; color: var(--fg-tertiary); font-weight: 400; display: block; margin-top: 2px; }
+  .delta-cell { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+  .delta-cell.pos { color: var(--pos); }
+  .delta-cell.neg { color: var(--neg); }
+  .delta-cell small { display: block; color: var(--fg-tertiary); font-weight: 400; margin-top: 2px; font-size: 11px; }
+
+  .conf { display: flex; align-items: center; gap: 10px; }
+  .conf .bar { flex: 1; max-width: 100px; height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; }
+  .conf .bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), #A78BFA); border-radius: 3px; }
+  .conf .pct { font-family: var(--font-mono); font-size: 12px; color: var(--fg-primary); font-weight: 500; min-width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .model-chip { font-family: var(--font-mono); font-size: 11px; color: #C4B5FD; padding: 3px 7px; background: var(--purple-deep); border: 1px solid var(--purple-border); border-radius: 4px; display: inline-block; }
+
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; }
+  .status.active { color: var(--pos); }
+  .status.active .d { width: 6px; height: 6px; border-radius: 50%; background: var(--pos); animation: pulse 2s ease-in-out infinite; }
+  .status.pending { color: var(--warn); }
+  .status.pending .d { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .action-btn { background: transparent; border: 1px solid var(--border-default); color: var(--fg-secondary); padding: 5px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; font-weight: 500; }
+  .action-btn:hover { background: var(--bg-elevated); color: var(--fg-primary); }
+
+  /* Split: 2 col summary */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .perf-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; position: relative; overflow: hidden; }
+  .perf-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-primary), transparent); opacity: 0.5; }
+  .perf-card h3 { font-size: 13px; font-weight: 500; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 18px; }
+  .perf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .perf-stats .slot { display: flex; flex-direction: column; gap: 4px; }
+  .perf-stats .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-tertiary); font-weight: 500; }
+  .perf-stats .val { font-family: var(--font-mono); font-size: 22px; font-weight: 500; letter-spacing: -0.01em; color: var(--fg-primary); font-variant-numeric: tabular-nums; line-height: 1; }
+  .perf-stats .sub { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+  .acc-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .acc-bar { display: grid; grid-template-columns: 60px 1fr 50px; gap: 10px; align-items: center; font-size: 12px; }
+  .acc-bar .n { color: var(--fg-secondary); font-family: var(--font-mono); }
+  .acc-bar .b { height: 8px; background: var(--bg-elevated); border-radius: 4px; overflow: hidden; }
+  .acc-bar .b .f { height: 100%; background: var(--accent-primary); border-radius: 4px; }
+  .acc-bar .p { font-family: var(--font-mono); color: var(--fg-primary); text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  .drivers-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+  .driver { display: grid; grid-template-columns: 1fr 80px 60px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+  .driver:last-child { border-bottom: none; }
+  .driver .nm { font-size: 13px; color: var(--fg-primary); font-weight: 500; }
+  .driver .nm small { display: block; font-size: 11px; color: var(--fg-tertiary); font-weight: 400; margin-top: 2px; }
+  .driver .imp { height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; }
+  .driver .imp .f { height: 100%; background: var(--accent-primary); }
+  .driver .v { font-family: var(--font-mono); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .driver.neg .imp .f { background: var(--neg); }
+  .driver.neg .v { color: var(--neg); }
+  .driver.pos .v { color: var(--pos); }
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo">
+    <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+      <line x1="14" y1="32" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+      <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+      <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="#8B5CF6" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+    </svg>
+    Apex <span class="num">500</span>
+  </div>
+  <nav>
+    <a href="../dashboard/index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-7"/></svg>Dashboard<span class="kbd">D</span></a>
+    <a href="#" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0Z"/></svg>Predictions<span class="kbd">P</span></a>
+    <a href="insights.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Insights<span class="kbd">I</span></a>
+    <a href="watchlist.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-5-6.5 5 2-7.5L2 9h7z"/></svg>Watchlist<span class="kbd">W</span></a>
+    <div class="group">Models</div>
+    <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l10 5-10 5L2 7l10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>LSTM v4.1</a>
+    <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/></svg>Transformer-L</a>
+    <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Ensemble</a>
+  </nav>
+</aside>
+
+<div class="app">
+  <div class="top">
+    <span class="crumb"><span>Apex 500</span><span class="sep">/</span><strong>Predictions</strong></span>
+    <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>Search predictions, assets…<span class="kbd">⌘K</span></div>
+    <div class="avatar">MK</div>
+  </div>
+
+  <main>
+
+    <div class="phead">
+      <div>
+        <h1>Predictions</h1>
+        <p>All model forecasts across horizons and assets. Sorted by confidence.</p>
+      </div>
+      <div class="actions">
+        <button class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+        <button class="btn primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New prediction</button>
+      </div>
+    </div>
+
+    <!-- Hero: most confident active prediction -->
+    <div class="hero">
+      <div class="l">
+        <div class="eye">Top prediction · highest confidence</div>
+        <h2>S&amp;P 500 is likely to close higher in 5 trading days.</h2>
+        <p class="sub">The Transformer-L model estimates a +0.87% move with 74% confidence, driven primarily by declining implied volatility and improving breadth. See drivers below.</p>
+      </div>
+      <div class="r">
+        <div class="slot">
+          <span class="lbl">Current</span>
+          <span class="val">5,218</span>
+        </div>
+        <svg class="chart" viewBox="0 0 300 80" preserveAspectRatio="none">
+          <defs><linearGradient id="hg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.3)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient></defs>
+          <path d="M0 50 L40 48 L80 44 L120 42 L160 38 L200 40 L210 36 L210 80 L0 80 Z" fill="url(#hg1)"/>
+          <path d="M0 50 L40 48 L80 44 L120 42 L160 38 L200 40 L210 36" stroke="#EDEDEF" stroke-width="1.5" fill="none"/>
+          <path d="M210 36 L240 28 L270 20 L300 14" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="4 3" fill="none"/>
+          <line x1="210" y1="0" x2="210" y2="80" stroke="#46464E" stroke-dasharray="2 2"/>
+          <circle cx="300" cy="14" r="4" fill="#8B5CF6"/>
+        </svg>
+        <div class="slot">
+          <span class="lbl">Predicted · 5D</span>
+          <span class="val" style="color: var(--accent-primary);">5,264</span>
+          <span class="delta">▲ +0.87%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filterbar">
+      <span class="lbl">Horizon</span>
+      <div class="seg">
+        <button>All</button>
+        <button class="on">Active</button>
+        <button>1D</button>
+        <button>5D</button>
+        <button>30D</button>
+      </div>
+      <span class="lbl" style="margin-left: 16px;">Model</span>
+      <div class="seg">
+        <button class="on">All</button>
+        <button>Transformer</button>
+        <button>LSTM</button>
+        <button>Ensemble</button>
+      </div>
+      <div class="spacer"></div>
+      <span class="meta">24 predictions · updated 47s ago</span>
+    </div>
+
+    <!-- Predictions table -->
+    <div class="table-wrap">
+      <div class="thead">
+        <span>Horizon</span>
+        <span>Asset</span>
+        <span class="sortable">Predicted <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+        <span>Δ vs. current</span>
+        <span class="sortable">Confidence <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></span>
+        <span>Model</span>
+        <span>Status</span>
+        <span></span>
+      </div>
+
+      <div class="trow">
+        <span class="horizon">5D</span>
+        <div class="target-asset"><span class="ticker">SPX</span><span class="name">S&amp;P 500</span></div>
+        <span class="pred-val">5,264.12<small>band: 5,238 – 5,291</small></span>
+        <span class="delta-cell pos">+0.87%<small>+45.65 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 74%;"></div></div><span class="pct">74%</span></div>
+        <span class="model-chip">Transformer-L</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">1D</span>
+        <div class="target-asset"><span class="ticker">SPX</span><span class="name">S&amp;P 500</span></div>
+        <span class="pred-val">5,225.40<small>band: 5,213 – 5,238</small></span>
+        <span class="delta-cell pos">+0.14%<small>+6.93 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 82%;"></div></div><span class="pct">82%</span></div>
+        <span class="model-chip">Ensemble</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">30D</span>
+        <div class="target-asset"><span class="ticker">SPX</span><span class="name">S&amp;P 500</span></div>
+        <span class="pred-val">5,342.88<small>band: 5,215 – 5,470</small></span>
+        <span class="delta-cell pos">+2.38%<small>+124.41 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 58%;"></div></div><span class="pct">58%</span></div>
+        <span class="model-chip">Transformer-L</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">5D</span>
+        <div class="target-asset"><span class="ticker">NDX</span><span class="name">Nasdaq 100</span></div>
+        <span class="pred-val">18,284.10<small>band: 18,105 – 18,463</small></span>
+        <span class="delta-cell pos">+1.34%<small>+242.00 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 68%;"></div></div><span class="pct">68%</span></div>
+        <span class="model-chip">LSTM v4.1</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">5D</span>
+        <div class="target-asset"><span class="ticker">VIX</span><span class="name">Volatility Index</span></div>
+        <span class="pred-val">13.24<small>band: 12.40 – 14.10</small></span>
+        <span class="delta-cell neg">−6.8%<small>−0.96 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 71%;"></div></div><span class="pct">71%</span></div>
+        <span class="model-chip">Transformer-L</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">1D</span>
+        <div class="target-asset"><span class="ticker">DJI</span><span class="name">Dow Jones</span></div>
+        <span class="pred-val">38,842.30<small>band: 38,780 – 38,905</small></span>
+        <span class="delta-cell neg">−0.19%<small>−72.42 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 61%;"></div></div><span class="pct">61%</span></div>
+        <span class="model-chip">Ensemble</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">30D</span>
+        <div class="target-asset"><span class="ticker">NDX</span><span class="name">Nasdaq 100</span></div>
+        <span class="pred-val">18,712.44<small>band: 18,200 – 19,230</small></span>
+        <span class="delta-cell pos">+3.72%<small>+670.34 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 52%;"></div></div><span class="pct">52%</span></div>
+        <span class="model-chip">LSTM v4.1</span>
+        <span class="status pending"><span class="d"></span>Calibrating</span>
+        <button class="action-btn">View</button>
+      </div>
+      <div class="trow">
+        <span class="horizon">5D</span>
+        <div class="target-asset"><span class="ticker">RUT</span><span class="name">Russell 2000</span></div>
+        <span class="pred-val">2,134.80<small>band: 2,108 – 2,162</small></span>
+        <span class="delta-cell pos">+0.42%<small>+8.92 pts</small></span>
+        <div class="conf"><div class="bar"><div class="fill" style="width: 63%;"></div></div><span class="pct">63%</span></div>
+        <span class="model-chip">Ensemble</span>
+        <span class="status active"><span class="d"></span>Live</span>
+        <button class="action-btn">View</button>
+      </div>
+    </div>
+
+    <!-- Summary split -->
+    <div class="split">
+      <div class="perf-card">
+        <h3>Model performance · last 90 days</h3>
+        <div class="perf-stats">
+          <div class="slot">
+            <span class="lbl">Directional</span>
+            <span class="val" style="color: var(--accent-primary);">72.3%</span>
+            <span class="sub">+18pp vs. consensus</span>
+          </div>
+          <div class="slot">
+            <span class="lbl">Sharpe</span>
+            <span class="val" style="color: var(--pos);">2.4</span>
+            <span class="sub">vs. SPX 0.9</span>
+          </div>
+          <div class="slot">
+            <span class="lbl">Calibration</span>
+            <span class="val">0.93</span>
+            <span class="sub">Brier ref 0.85</span>
+          </div>
+        </div>
+        <div class="acc-bars">
+          <div class="acc-bar"><span class="n">1D</span><div class="b"><div class="f" style="width: 81%;"></div></div><span class="p">81%</span></div>
+          <div class="acc-bar"><span class="n">5D</span><div class="b"><div class="f" style="width: 72%;"></div></div><span class="p">72%</span></div>
+          <div class="acc-bar"><span class="n">30D</span><div class="b"><div class="f" style="width: 58%;"></div></div><span class="p">58%</span></div>
+        </div>
+      </div>
+
+      <div class="perf-card">
+        <h3>Top drivers · S&amp;P 500 · 5D forecast</h3>
+        <div class="drivers-list">
+          <div class="driver pos">
+            <div class="nm">VIX term structure<small>Contango steepening · bullish</small></div>
+            <div class="imp"><div class="f" style="width: 90%;"></div></div>
+            <span class="v">+0.34</span>
+          </div>
+          <div class="driver pos">
+            <div class="nm">Breadth · % above 50DMA<small>68% · expanding participation</small></div>
+            <div class="imp"><div class="f" style="width: 72%;"></div></div>
+            <span class="v">+0.21</span>
+          </div>
+          <div class="driver pos">
+            <div class="nm">Put/Call ratio (5D avg)<small>0.82 · moderately bullish</small></div>
+            <div class="imp"><div class="f" style="width: 58%;"></div></div>
+            <span class="v">+0.15</span>
+          </div>
+          <div class="driver neg">
+            <div class="nm">Treasury yield spike<small>10Y +12bp · headwind</small></div>
+            <div class="imp"><div class="f" style="width: 45%;"></div></div>
+            <span class="v">−0.11</span>
+          </div>
+          <div class="driver neg">
+            <div class="nm">Sector rotation intensity<small>Cyclicals weakening</small></div>
+            <div class="imp"><div class="f" style="width: 28%;"></div></div>
+            <span class="v">−0.07</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

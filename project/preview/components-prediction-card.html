@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 14px; }
+  .head { display: flex; align-items: center; justify-content: space-between; }
+  .head-left { display: flex; align-items: center; gap: 10px; }
+  .pill-ai { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; background: rgba(139, 92, 246,0.12); color: #A78BFA; border-radius: 999px; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em; }
+  .pill-ai .dot { width: 5px; height: 5px; border-radius: 50%; background: #8B5CF6; box-shadow: 0 0 6px rgba(139, 92, 246,0.6); }
+  .horizon { font-size: 12px; color: var(--fg-tertiary); }
+  .why { font-size: 12px; color: var(--accent-hover); cursor: pointer; }
+  .why:hover { text-decoration: underline; }
+  .big-row { display: flex; align-items: baseline; gap: 16px; }
+  .val { font-family: var(--font-mono); font-size: 32px; font-weight: 500; letter-spacing: -0.01em; color: var(--fg-primary); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .delta-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: rgba(34, 197, 94,0.12); color: #22C55E; font-family: var(--font-mono); font-size: 12px; font-weight: 500; }
+  .meta-row { display: flex; gap: 20px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+  .m-cell { display: flex; flex-direction: column; gap: 4px; }
+  .m-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--fg-tertiary); font-weight: 500; }
+  .m-val { font-family: var(--font-mono); font-size: 13px; color: var(--fg-primary); font-variant-numeric: tabular-nums; }
+  .conf { display: flex; align-items: center; gap: 6px; }
+  .conf-bar { width: 52px; height: 3px; border-radius: 2px; background: var(--border-default); position: relative; overflow: hidden; }
+  .conf-bar::after { content: ''; position: absolute; inset: 0; width: 72%; background: linear-gradient(90deg, #8B5CF6, #A78BFA); border-radius: 2px; box-shadow: 0 0 8px rgba(139, 92, 246,0.5); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="head">
+      <div class="head-left">
+        <span class="pill-ai"><span class="dot"></span>AI forecast</span>
+        <span class="horizon">Next 5 sessions · ends Apr 27</span>
+      </div>
+      <span class="why">Why this? →</span>
+    </div>
+    <div class="big-row">
+      <span class="val">5,264.10</span>
+      <span class="delta-pill">▲ +0.87%</span>
+    </div>
+    <div class="meta-row">
+      <div class="m-cell"><span class="m-lbl">Confidence</span><div class="conf"><span class="m-val">72%</span><div class="conf-bar"></div></div></div>
+      <div class="m-cell"><span class="m-lbl">Direction</span><span class="m-val" style="color:#22C55E">Bullish</span></div>
+      <div class="m-cell"><span class="m-lbl">Model</span><span class="m-val">LSTM v4.1</span></div>
+      <div class="m-cell"><span class="m-lbl">Range 95%</span><span class="m-val">5,198 – 5,331</span></div>
+    </div>
+  </div>
+</body>
+</html>

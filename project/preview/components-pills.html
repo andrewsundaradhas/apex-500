@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; font-family: var(--font-sans); }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .pill-ai { background: rgba(139, 92, 246,0.12); color: #A78BFA; }
+  .pill-ai .dot { background: #8B5CF6; box-shadow: 0 0 8px rgba(139, 92, 246,0.6); }
+  .pill-pos { background: rgba(34, 197, 94,0.12); color: #22C55E; }
+  .pill-pos .dot { background: #22C55E; }
+  .pill-neg { background: rgba(244, 63, 94,0.12); color: #F43F5E; }
+  .pill-neg .dot { background: #F43F5E; }
+  .pill-neutral { background: var(--bg-elevated); color: var(--fg-secondary); border: 1px solid var(--border-default); }
+  .pill-warn { background: rgba(234, 179, 8,0.12); color: #EAB308; }
+  .pill-warn .dot { background: #EAB308; }
+  .conf {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--fg-primary);
+    background: var(--bg-canvas); border: 1px solid var(--border-default);
+    padding: 4px 10px; border-radius: var(--radius-sm);
+  }
+  .conf-bar { width: 40px; height: 4px; border-radius: 2px; background: var(--border-default); position: relative; }
+  .conf-bar::after { content: ''; position: absolute; inset: 0; width: 72%; background: var(--accent-primary); border-radius: 2px; }
+  .model { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="pill pill-ai"><span class="dot"></span>AI forecast</span>
+    <span class="pill pill-pos"><span class="dot"></span>Bullish</span>
+    <span class="pill pill-neg"><span class="dot"></span>Bearish</span>
+    <span class="pill pill-warn"><span class="dot"></span>High volatility</span>
+    <span class="pill pill-neutral">Live</span>
+    <span class="conf">72% <div class="conf-bar"></div></span>
+    <span class="model">LSTM v4.1</span>
+    <span class="model">TRANSFORMER-L</span>
+  </div>
+</body>
+</html>

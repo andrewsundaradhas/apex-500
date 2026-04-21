@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .cell {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    min-height: 120px;
+  }
+  .head { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .name { font-size: 12px; font-weight: 500; color: var(--fg-primary); text-transform: uppercase; letter-spacing: 0.02em; }
+  .val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .hex { font-family: var(--font-mono); font-size: 10px; color: var(--fg-tertiary); margin-top: auto; }
+  .pill {
+    display: inline-flex; align-self: flex-start; align-items: center;
+    padding: 3px 8px; border-radius: 999px;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="cell">
+      <div class="head"><span class="dot" style="background:#22C55E"></span><span class="name">Positive</span></div>
+      <div class="val" style="color:#22C55E">+1.24%</div>
+      <span class="pill" style="background:rgba(34, 197, 94,0.12); color:#22C55E">▲ Bullish</span>
+      <span class="hex">#22C55E</span>
+    </div>
+    <div class="cell">
+      <div class="head"><span class="dot" style="background:#F43F5E"></span><span class="name">Negative</span></div>
+      <div class="val" style="color:#F43F5E">−0.86%</div>
+      <span class="pill" style="background:rgba(244, 63, 94,0.12); color:#F43F5E">▼ Bearish</span>
+      <span class="hex">#F43F5E</span>
+    </div>
+    <div class="cell">
+      <div class="head"><span class="dot" style="background:#EAB308"></span><span class="name">Warning</span></div>
+      <div class="val" style="color:#EAB308">Volatile</div>
+      <span class="pill" style="background:rgba(234, 179, 8,0.12); color:#EAB308">VIX 24.3</span>
+      <span class="hex">#EAB308</span>
+    </div>
+    <div class="cell">
+      <div class="head"><span class="dot" style="background:#38BDF8"></span><span class="name">Info</span></div>
+      <div class="val" style="color:#38BDF8">12 news</div>
+      <span class="pill" style="background:rgba(56, 189, 248,0.12); color:#38BDF8">Feed</span>
+      <span class="hex">#38BDF8</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex 500 — Forecast with signal</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; overflow-x: hidden; background: var(--bg-canvas); color: var(--fg-primary); font-family: var(--font-sans); }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 16px 32px;
+    display: flex; align-items: center; gap: 32px;
+    background: rgba(7,9,13,0.6); backdrop-filter: blur(16px) saturate(140%);
+    border-bottom: 1px solid transparent; transition: border-color 200ms;
+  }
+  .nav.scrolled { border-bottom-color: var(--border-subtle); }
+  .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .nav-brand .mono { font-family: var(--font-mono); color: var(--accent-primary); }
+  .nav-links { display: flex; gap: 28px; margin-left: 24px; }
+  .nav-links a { font-size: 13px; color: var(--fg-secondary); transition: color 120ms; }
+  .nav-links a:hover { color: var(--fg-primary); }
+  .nav-cta { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .btn-p { background: var(--accent-primary); color: white; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; border: none; cursor: pointer; transition: all 200ms var(--ease-out); }
+  .btn-p:hover { background: var(--accent-hover); box-shadow: 0 0 24px rgba(139, 92, 246,0.4); transform: translateY(-1px); }
+  .btn-g { background: transparent; color: var(--fg-secondary); padding: 8px 14px; font-size: 13px; cursor: pointer; border: none; }
+  .btn-g:hover { color: var(--fg-primary); }
+
+  /* ============ HERO ============ */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    padding: 160px 32px 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .hero-grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1200px 800px at 70% 20%, rgba(139, 92, 246,0.12), transparent 60%),
+      radial-gradient(600px 400px at 20% 80%, rgba(56, 189, 248,0.06), transparent 60%),
+      linear-gradient(rgba(139, 92, 246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246,0.04) 1px, transparent 1px);
+    background-size: auto, auto, 80px 80px, 80px 80px;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse at 50% 40%, black 30%, transparent 80%);
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px;
+    background: rgba(139, 92, 246,0.08);
+    border: 1px solid rgba(139, 92, 246,0.25);
+    border-radius: 999px;
+    font-size: 12px; color: #C4B5FD; font-weight: 500;
+    margin-bottom: 24px;
+    animation: float-in 800ms var(--ease-out) both;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary); box-shadow: 0 0 8px rgba(139, 92, 246,0.8); animation: pulse 2s ease-in-out infinite; }
+
+  h1.hero-title {
+    font-size: clamp(48px, 6vw, 84px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 24px;
+    animation: float-in 800ms 100ms var(--ease-out) both;
+  }
+  h1.hero-title .accent {
+    background: linear-gradient(135deg, #8B5CF6 0%, #8B5CF6 50%, #38BDF8 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 8s linear infinite;
+    background-size: 200% 100%;
+  }
+  @keyframes shimmer { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
+
+  .hero-sub {
+    font-size: 18px; color: var(--fg-secondary); line-height: 1.55;
+    max-width: 520px; margin-bottom: 40px;
+    animation: float-in 800ms 200ms var(--ease-out) both;
+  }
+  .hero-cta { display: flex; gap: 12px; animation: float-in 800ms 300ms var(--ease-out) both; margin-bottom: 56px; }
+  .btn-hero-p { background: var(--accent-primary); color: white; padding: 14px 22px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 200ms var(--ease-out); }
+  .btn-hero-p:hover { background: var(--accent-hover); box-shadow: 0 8px 32px rgba(139, 92, 246,0.4); transform: translateY(-2px); }
+  .btn-hero-g { background: var(--bg-surface); color: var(--fg-primary); padding: 14px 22px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; border: 1px solid var(--border-default); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-hero-g:hover { background: var(--bg-elevated); }
+
+  .stats { display: flex; gap: 48px; animation: float-in 800ms 400ms var(--ease-out) both; }
+  .stat-v { font-family: var(--font-mono); font-size: 24px; font-weight: 500; color: var(--fg-primary); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .stat-l { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-tertiary); margin-top: 4px; }
+
+  @keyframes float-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ============ 3D HERO VISUAL ============ */
+  .hero-visual {
+    position: relative;
+    height: 560px;
+    perspective: 1600px;
+    animation: float-in 1200ms 200ms var(--ease-out) both;
+  }
+  .viz-3d {
+    position: absolute; inset: 0;
+    transform-style: preserve-3d;
+    animation: rotate-3d 30s linear infinite;
+  }
+  @keyframes rotate-3d {
+    0%   { transform: rotateX(52deg) rotateZ(0deg); }
+    100% { transform: rotateX(52deg) rotateZ(360deg); }
+  }
+  /* price planes floating in 3D */
+  .plane {
+    position: absolute; left: 50%; top: 50%;
+    width: 360px; height: 200px;
+    transform-style: preserve-3d;
+    margin-left: -180px; margin-top: -100px;
+  }
+  .chart-card {
+    position: absolute; inset: 0;
+    background: rgba(14,17,24,0.88);
+    border: 1px solid rgba(139, 92, 246,0.25);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(8px);
+  }
+  .chart-svg { width: 100%; height: 120px; }
+  .chart-ticker { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); letter-spacing: 0.04em; }
+  .chart-price { font-family: var(--font-mono); font-size: 22px; font-weight: 500; color: var(--fg-primary); font-variant-numeric: tabular-nums; }
+  .chart-delta { font-family: var(--font-mono); font-size: 11px; color: #22C55E; font-variant-numeric: tabular-nums; margin-left: 8px; }
+
+  /* orbiting sparkle particles */
+  .particle {
+    position: absolute; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent-primary);
+    box-shadow: 0 0 12px var(--accent-primary);
+  }
+  .p-ring {
+    position: absolute; left: 50%; top: 50%;
+    transform-style: preserve-3d;
+    animation: orbit 12s linear infinite;
+  }
+  @keyframes orbit {
+    from { transform: rotateX(70deg) rotateZ(0deg); }
+    to   { transform: rotateX(70deg) rotateZ(360deg); }
+  }
+
+  /* floating glowy blob */
+  .blob {
+    position: absolute;
+    width: 420px; height: 420px;
+    left: 50%; top: 50%;
+    margin-left: -210px; margin-top: -210px;
+    background: radial-gradient(circle, rgba(139, 92, 246,0.35) 0%, rgba(139, 92, 246,0) 60%);
+    filter: blur(20px);
+    animation: blob-float 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes blob-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(20px, -20px) scale(1.1); }
+  }
+
+  /* ============ SECTION HEADERS ============ */
+  section { padding: 120px 32px; max-width: 1400px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-primary); font-weight: 600; margin-bottom: 12px; }
+  .sec-title { font-size: clamp(32px, 4vw, 56px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 16px; max-width: 720px; }
+  .sec-sub { font-size: 17px; color: var(--fg-secondary); line-height: 1.6; max-width: 580px; margin-bottom: 56px; }
+
+  /* ============ FEATURE GRID ============ */
+  .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feat {
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg); padding: 32px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    transition: all 300ms var(--ease-out);
+    position: relative; overflow: hidden;
+  }
+  .feat:hover { border-color: rgba(139, 92, 246,0.35); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03); }
+  .feat-ico {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent-soft);
+    display: grid; place-items: center;
+    color: var(--accent-primary);
+    margin-bottom: 20px;
+    transition: all 300ms;
+  }
+  .feat:hover .feat-ico { box-shadow: 0 0 24px rgba(139, 92, 246,0.4); }
+  .feat h3 { font-size: 18px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .feat p { font-size: 14px; color: var(--fg-secondary); line-height: 1.55; margin: 0; }
+  .feat-visual { margin-top: 24px; height: 120px; border-radius: 8px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); padding: 12px; overflow: hidden; position: relative; }
+
+  /* ============ SHOWCASE ============ */
+  .showcase {
+    position: relative;
+    padding: 80px 32px;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .showcase-frame {
+    position: relative;
+    border-radius: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    box-shadow:
+      0 40px 100px rgba(0,0,0,0.5),
+      0 0 0 1px var(--border-default),
+      0 0 120px rgba(139, 92, 246,0.15);
+    overflow: hidden;
+    padding: 14px;
+    transform: perspective(2000px) rotateX(6deg);
+    transform-origin: center top;
+    transition: transform 800ms var(--ease-out);
+  }
+  .showcase:hover .showcase-frame { transform: perspective(2000px) rotateX(0deg); }
+  .showcase-frame iframe {
+    width: 100%; height: 720px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    display: block;
+    background: var(--bg-canvas);
+  }
+  .showcase-glow {
+    position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%);
+    width: 60%; height: 400px;
+    background: radial-gradient(ellipse, rgba(139, 92, 246,0.3) 0%, transparent 60%);
+    filter: blur(60px); z-index: -1;
+  }
+
+  /* ============ LOGOS ============ */
+  .logos {
+    padding: 40px 32px; max-width: 1400px; margin: 0 auto;
+    display: flex; justify-content: center; gap: 56px; align-items: center; flex-wrap: wrap;
+    border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);
+  }
+  .logos .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-tertiary); font-weight: 500; }
+  .logos .co { font-size: 15px; font-weight: 600; color: var(--fg-tertiary); letter-spacing: -0.01em; transition: color 200ms; }
+  .logos .co:hover { color: var(--fg-primary); }
+
+  /* ============ CTA ============ */
+  .cta {
+    position: relative;
+    margin: 80px 32px;
+    max-width: 1100px; margin-left: auto; margin-right: auto;
+    padding: 80px 56px;
+    background:
+      radial-gradient(600px 300px at 50% 0%, rgba(139, 92, 246,0.2), transparent 60%),
+      var(--bg-surface);
+    border: 1px solid rgba(139, 92, 246,0.25);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    overflow: hidden;
+  }
+  .cta h2 { font-size: clamp(32px, 4vw, 48px); font-weight: 600; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .cta p { color: var(--fg-secondary); font-size: 16px; max-width: 520px; margin: 0 auto 32px; line-height: 1.55; }
+
+  /* ============ FOOTER ============ */
+  footer { padding: 48px 32px 64px; max-width: 1400px; margin: 0 auto; border-top: 1px solid var(--border-subtle); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+  footer h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-tertiary); font-weight: 500; margin: 0 0 14px; }
+  footer a { display: block; font-size: 13px; color: var(--fg-secondary); margin-bottom: 8px; }
+  footer a:hover { color: var(--fg-primary); }
+  footer .copy { font-size: 12px; color: var(--fg-tertiary); margin-top: 20px; }
+</style>
+</head>
+<body>
+<nav class="nav" id="nav">
+  <div class="nav-brand">
+    <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+      <defs><linearGradient id="nl" x1="6" y1="30" x2="34" y2="10"><stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#818CF8"/></linearGradient></defs>
+      <line x1="14" y1="32" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+      <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+      <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#nl)" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+    </svg>
+    Apex <span class="mono">500</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">Product</a><a href="#">Models</a><a href="#">Pricing</a><a href="#">Docs</a><a href="#">Changelog</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn-g">Sign in</button>
+    <button class="btn-p">Start free</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-grid-bg"></div>
+  <div>
+    <div class="badge"><span class="dot"></span>New · Transformer-L v2 is live</div>
+    <h1 class="hero-title">Forecast the<br><span class="accent">S&amp;P 500</span> with signal, not noise.</h1>
+    <p class="hero-sub">Apex 500 runs an ensemble of LSTM and Transformer models over 40 years of market data. Get next-session, next-week, and next-month projections with calibrated confidence bands — and understand <em>why</em> the model called it.</p>
+    <div class="hero-cta">
+      <button class="btn-hero-p">Start free trial
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn-hero-g">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Watch 90s demo
+      </button>
+    </div>
+    <div class="stats">
+      <div><div class="stat-v">72%</div><div class="stat-l">5-day directional hit</div></div>
+      <div><div class="stat-v">40+ yrs</div><div class="stat-l">Training data</div></div>
+      <div><div class="stat-v">12k</div><div class="stat-l">Analysts on Apex</div></div>
+    </div>
+  </div>
+
+  <!-- 3D Visual -->
+  <div class="hero-visual">
+    <div class="blob"></div>
+    <div class="viz-3d">
+      <!-- Three floating chart cards in 3D space -->
+      <div class="plane" style="transform: translateZ(40px) translateY(-120px);">
+        <div class="chart-card">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+            <span class="chart-ticker">SPX · S&amp;P 500</span>
+            <span style="font-family:var(--font-mono); font-size:10px; color:var(--accent-primary);">LIVE</span>
+          </div>
+          <div><span class="chart-price">5,218.47</span><span class="chart-delta">+0.82%</span></div>
+          <svg class="chart-svg" viewBox="0 0 320 100" preserveAspectRatio="none">
+            <defs><linearGradient id="pf1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.3)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient></defs>
+            <path d="M0 70 L30 65 L60 68 L90 58 L120 62 L150 50 L180 54 L210 40 L240 44 L270 28 L300 22 L320 15 L320 100 L0 100Z" fill="url(#pf1)"/>
+            <path d="M0 70 L30 65 L60 68 L90 58 L120 62 L150 50 L180 54 L210 40 L240 44 L270 28 L300 22 L320 15" stroke="#EDEDEF" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+            <path d="M210 40 L240 36 L270 24 L300 18 L320 10" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="4 3" fill="none"/>
+            <circle cx="320" cy="10" r="3" fill="#8B5CF6"/>
+          </svg>
+        </div>
+      </div>
+      <div class="plane" style="transform: translateZ(0px) translateX(80px) translateY(60px); width: 280px; height: 160px; margin-left:-140px; margin-top:-80px;">
+        <div class="chart-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span class="chart-ticker">PREDICTION · 5D</span>
+            <span style="font-family:var(--font-mono); font-size:10px; padding:2px 6px; background:rgba(139, 92, 246,0.15); color:#A78BFA; border-radius:3px;">72%</span>
+          </div>
+          <div style="margin-bottom:8px;"><span class="chart-price" style="font-size:18px;">5,264.10</span><span class="chart-delta" style="font-size:10px;">▲ +0.87%</span></div>
+          <svg class="chart-svg" viewBox="0 0 240 80" preserveAspectRatio="none" style="height:60px">
+            <path d="M0 60 L30 50 L60 55 L90 40 L120 45 L150 30 L180 35 L210 22 L240 18" stroke="#22C55E" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="plane" style="transform: translateZ(-30px) translateX(-100px) translateY(140px); width: 260px; height: 150px; margin-left:-130px; margin-top:-75px;">
+        <div class="chart-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span class="chart-ticker">SECTORS</span>
+            <span style="font-family:var(--font-mono); font-size:10px; color:var(--fg-tertiary);">11 of 11</span>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:3px;">
+            <div style="height:30px; background:rgba(244, 63, 94,0.5); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLK</div>
+            <div style="height:30px; background:rgba(34, 197, 94,0.5); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLF</div>
+            <div style="height:30px; background:rgba(34, 197, 94,0.7); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLE</div>
+            <div style="height:30px; background:rgba(30,35,48,0.8); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:#A1A1AA;">XLV</div>
+            <div style="height:30px; background:rgba(244, 63, 94,0.6); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLY</div>
+            <div style="height:30px; background:rgba(34, 197, 94,0.3); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLI</div>
+            <div style="height:30px; background:rgba(244, 63, 94,0.5); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLP</div>
+            <div style="height:30px; background:rgba(34, 197, 94,0.8); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLU</div>
+            <div style="height:30px; background:rgba(34, 197, 94,0.4); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLB</div>
+            <div style="height:30px; background:rgba(30,35,48,0.8); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:#A1A1AA;">XLRE</div>
+            <div style="height:30px; background:rgba(244, 63, 94,0.4); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLC</div>
+            <div style="height:30px; background:rgba(34, 197, 94,0.5); border-radius:3px; padding:4px; font-family:var(--font-mono); font-size:9px; color:white;">XLK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orbiting particles in 3D -->
+      <div class="p-ring" style="width:480px; height:480px; margin-left:-240px; margin-top:-240px;">
+        <div class="particle" style="top:0; left:50%;"></div>
+        <div class="particle" style="top:50%; left:0;"></div>
+        <div class="particle" style="top:50%; right:0; background:#22C55E; box-shadow:0 0 12px #22C55E;"></div>
+        <div class="particle" style="bottom:0; left:50%; background:#38BDF8; box-shadow:0 0 12px #38BDF8;"></div>
+      </div>
+      <div class="p-ring" style="width:340px; height:340px; margin-left:-170px; margin-top:-170px; animation-duration:8s; animation-direction:reverse;">
+        <div class="particle" style="top:0; left:50%;"></div>
+        <div class="particle" style="top:50%; right:0; background:#EAB308; box-shadow:0 0 10px #EAB308;"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- LOGO STRIP -->
+<div class="logos">
+  <span class="lbl">Trusted by analysts at</span>
+  <span class="co">Lighthouse Capital</span>
+  <span class="co">Meridian Funds</span>
+  <span class="co">Parallax &amp; Co.</span>
+  <span class="co">Keystone Partners</span>
+  <span class="co">North Ridge</span>
+</div>
+
+<!-- FEATURES -->
+<section>
+  <div class="eyebrow">The product</div>
+  <h2 class="sec-title">Analyst-grade forecasting, with the receipts.</h2>
+  <p class="sec-sub">Every prediction ships with its model, its confidence, its attention map, and its 95% range. No black boxes, no vibes.</p>
+
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="feat-ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0Z"/></svg>
+      </div>
+      <h3>Ensemble predictions</h3>
+      <p>Three horizons, three models. LSTM for short-term, Transformer-L for pattern memory, ensemble for the call you commit to.</p>
+      <div class="feat-visual">
+        <svg viewBox="0 0 280 96" style="width:100%; height:100%">
+          <path d="M0 70 L40 65 L80 60 L120 50 L160 45 L200 35 L240 28 L280 20" stroke="#EDEDEF" stroke-width="1.5" fill="none"/>
+          <path d="M160 45 L200 32 L240 22 L280 12" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="4 3" fill="none"/>
+          <path d="M160 45 L200 24 L240 14 L280 4 L280 30 L240 34 L200 40 L160 45 Z" fill="rgba(139, 92, 246,0.14)"/>
+          <circle cx="280" cy="12" r="3" fill="#8B5CF6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <h3>Plain-English insights</h3>
+      <p>An AI narrator summarizes the state of the market in paragraphs you can actually read. Flags anomalies before they become headlines.</p>
+      <div class="feat-visual" style="padding:14px">
+        <div style="font-size:11px; color:var(--fg-primary); line-height:1.5; margin-bottom:8px">Tech momentum carried the index +0.8%. <span style="color:#22C55E">Bullish</span>.</div>
+        <div style="font-size:10px; color:var(--fg-tertiary); font-family:var(--font-mono)">0.71 conf · 3 signals · 2m ago</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-7"/></svg>
+      </div>
+      <h3>What-if scenarios</h3>
+      <p>Rate hike? Inflation surprise? Sector rotation? Move the sliders, watch the projection recompute live.</p>
+      <div class="feat-visual" style="padding:14px; display:flex; flex-direction:column; gap:10px; justify-content:center">
+        <div style="display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:10px; color:var(--fg-tertiary)">+0.25pp<div style="flex:1; height:3px; background:var(--border-default); border-radius:2px; position:relative"><div style="position:absolute; left:0; top:0; bottom:0; width:60%; background:#8B5CF6; border-radius:2px; box-shadow:0 0 6px rgba(139, 92, 246,0.5)"></div></div></div>
+        <div style="font-size:14px; color:#F43F5E; font-family:var(--font-mono); font-weight:500">−1.42% projected</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT SHOWCASE -->
+<section class="showcase">
+  <div class="showcase-glow"></div>
+  <div class="eyebrow" style="text-align:center">Live preview</div>
+  <h2 class="sec-title" style="text-align:center; margin-left:auto; margin-right:auto">The terminal, reimagined.</h2>
+  <p class="sec-sub" style="text-align:center; margin-left:auto; margin-right:auto">Built for analysts who want Bloomberg density, Stripe clarity, and an AI that shows its work.</p>
+  <div class="showcase-frame">
+    <iframe src="../dashboard/index.html" loading="lazy" title="Apex 500 dashboard"></iframe>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta">
+  <h2>Start forecasting in 60 seconds.</h2>
+  <p>Free for 14 days. No credit card. Watchlist, one model, three horizons.</p>
+  <button class="btn-hero-p">Start free trial →</button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="nav-brand" style="margin-bottom:12px">
+      <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+        <defs><linearGradient id="fl" x1="6" y1="30" x2="34" y2="10"><stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#818CF8"/></linearGradient></defs>
+        <line x1="14" y1="32" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+        <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+        <path d="M6 30 L14 24 L20 18 L26 14 L34 8" stroke="url(#fl)" stroke-width="2.5"/>
+        <circle cx="34" cy="8" r="2.5" fill="#8B5CF6"/>
+      </svg>
+      Apex <span class="mono">500</span>
+    </div>
+    <p style="font-size:13px; color:var(--fg-secondary); line-height:1.55; max-width:320px">AI-powered S&amp;P 500 forecasting for analysts who want the math, not the hype.</p>
+    <div class="copy">© 2026 Apex 500 Inc. · Not investment advice.</div>
+  </div>
+  <div><h4>Product</h4><a>Dashboard</a><a>Predictions</a><a>API</a><a>Changelog</a></div>
+  <div><h4>Company</h4><a>About</a><a>Blog</a><a>Careers</a><a>Contact</a></div>
+  <div><h4>Resources</h4><a>Docs</a><a>Model cards</a><a>Security</a><a>Status</a></div>
+</footer>
+
+<script>
+  addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', scrollY > 8);
+  });
+</script>
+</body>
+</html>

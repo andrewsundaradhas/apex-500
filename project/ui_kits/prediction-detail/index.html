@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex 500 — 5-Day Prediction Deep Dive</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  body { margin:0; background: var(--bg-canvas); color: var(--fg-primary); font-family: var(--font-sans); }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 32px 40px 80px; animation: page-in 600ms var(--ease-out); }
+  @keyframes page-in { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none;} }
+
+  .crumb { display:flex; align-items:center; gap: 8px; font-size: 12px; color: var(--fg-tertiary); margin-bottom: 24px; }
+  .crumb a { color: var(--fg-secondary); cursor: pointer; }
+  .crumb a:hover { color: var(--fg-primary); }
+  .crumb .sep { opacity: 0.5; }
+
+  /* ======= HEADER ======= */
+  .head { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: end; padding-bottom: 24px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 32px; }
+  .tag-row { display:flex; gap: 8px; margin-bottom: 14px; }
+  .tag { display:inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; }
+  .tag.hz { background: var(--accent-soft); color: #C4B5FD; border: 1px solid rgba(139, 92, 246,0.25); }
+  .tag.pos { background: var(--pos-soft); color: #4ADE80; border: 1px solid rgba(34, 197, 94,0.25); }
+  .tag.lstm { background: rgba(234, 179, 8,0.1); color: #FBBF24; border: 1px solid rgba(234, 179, 8,0.25); }
+  .head h1 { font-size: 42px; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 6px; }
+  .head p.sub { font-size: 15px; color: var(--fg-secondary); max-width: 620px; line-height: 1.55; }
+
+  .head-actions { display:flex; gap: 8px; align-items: center; }
+  .act-btn { padding: 8px 14px; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); color: var(--fg-secondary); font-size: 13px; cursor: pointer; display:inline-flex; align-items:center; gap: 6px; font-family: var(--font-sans); }
+  .act-btn:hover { background: var(--bg-elevated); color: var(--fg-primary); }
+  .act-btn.primary { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+  .act-btn.primary:hover { background: var(--accent-hover); box-shadow: 0 0 20px rgba(139, 92, 246,0.4); }
+
+  /* ======= KPI STRIP ======= */
+  .kpi { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 32px; }
+  .kpi > div { background: var(--bg-surface); padding: 22px 26px; position: relative; }
+  .kpi .l { font-size: 11px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; font-weight: 500; }
+  .kpi .v { font-family: var(--font-mono); font-size: 26px; font-weight: 500; color: var(--fg-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .kpi .d { font-family: var(--font-mono); font-size: 12px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+  /* confidence ring */
+  .ring { position: relative; width: 60px; height: 60px; margin-top: -2px; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .bg { stroke: var(--border-default); }
+  .ring .fg { stroke: var(--accent-primary); stroke-linecap: round; stroke-dasharray: 157; filter: drop-shadow(0 0 6px rgba(139, 92, 246,0.5)); animation: dash 1.2s var(--ease-out) forwards; }
+  @keyframes dash { from { stroke-dashoffset: 157;} to { stroke-dashoffset: 44;} }
+  .ring .n { position: absolute; inset: 0; display:grid; place-items:center; font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--fg-primary); }
+
+  /* ======= MAIN GRID ======= */
+  .grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
+
+  /* big chart card */
+  .big-chart { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-card); margin-bottom: 20px; }
+  .bc-head { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; }
+  .bc-head h3 { font-size: 16px; font-weight: 600; }
+  .bc-head .controls { display:flex; gap: 6px; }
+  .pill { padding: 6px 10px; font-family: var(--font-mono); font-size: 11px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: 4px; color: var(--fg-secondary); cursor: pointer; }
+  .pill.on { background: var(--accent-soft); color: var(--accent-primary); border-color: rgba(139, 92, 246,0.35); }
+
+  .chart { width: 100%; height: 340px; display: block; }
+
+  .chart-foot { display:flex; justify-content:space-between; gap: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+  .legend { display:flex; gap: 18px; align-items: center; }
+  .legend span { display:flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 20px; height: 2px; border-radius: 1px; }
+
+  /* Attribution row */
+  .attr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .panel { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 22px; box-shadow: var(--shadow-card); }
+  .panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .panel .p-sub { font-size: 12px; color: var(--fg-tertiary); margin-bottom: 18px; }
+
+  /* Feature bars (attention) */
+  .feat-row { display: flex; flex-direction: column; gap: 10px; }
+  .feat-row .ft { display: grid; grid-template-columns: 120px 1fr 50px; gap: 12px; align-items: center; font-size: 12px; }
+  .feat-row .nm { color: var(--fg-secondary); }
+  .feat-row .bar { height: 6px; background: var(--bg-elevated); border-radius: 3px; overflow: hidden; position: relative; }
+  .feat-row .bar::before { content:''; position:absolute; inset: 0; width: var(--w,0%); background: linear-gradient(90deg, var(--accent-primary), #818CF8); border-radius: 3px; box-shadow: 0 0 8px rgba(139, 92, 246,0.3); animation: growl 900ms var(--ease-out) forwards; }
+  @keyframes growl { from { width: 0;} }
+  .feat-row .val { font-family: var(--font-mono); font-size: 11px; color: var(--fg-primary); text-align: right; font-variant-numeric: tabular-nums; }
+  .feat-row .dir-up::after { content: ' ↑'; color: var(--pos); }
+  .feat-row .dir-down::after { content: ' ↓'; color: var(--neg); }
+
+  /* Model ensemble */
+  .models { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .model-card { padding: 14px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); transition: all 180ms; }
+  .model-card:hover { border-color: rgba(139, 92, 246,0.3); }
+  .model-card .mh { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; font-size: 11px; color: var(--fg-tertiary); letter-spacing: 0.04em; text-transform: uppercase; }
+  .model-card .mv { font-family: var(--font-mono); font-size: 17px; color: var(--fg-primary); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+  .model-card .md { font-family: var(--font-mono); font-size: 11px; color: var(--pos); }
+  .model-card .weight { margin-top: 10px; height: 3px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; position: relative; }
+  .model-card .weight::before { content:''; position:absolute; left: 0; top: 0; bottom: 0; width: var(--w, 0%); background: var(--accent-primary); border-radius: 2px; box-shadow: 0 0 6px rgba(139, 92, 246,0.4); animation: growl 1s var(--ease-out) forwards; }
+
+  /* History accuracy */
+  .hist-chart { width:100%; height: 180px; margin-top: 10px; }
+
+  /* Reasoning list */
+  .reason { padding: 14px 16px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-left: 2px solid var(--accent-primary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 10px; }
+  .reason h5 { font-size: 13px; font-weight: 600; color: var(--fg-primary); margin-bottom: 6px; }
+  .reason p { font-size: 12px; color: var(--fg-secondary); line-height: 1.55; margin: 0; }
+  .reason.pos { border-left-color: var(--pos); }
+  .reason.warn { border-left-color: var(--warn); }
+
+  /* Right rail */
+  .rail .panel { margin-bottom: 16px; }
+
+  .dist-bar { display:flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 16px 0 10px; background: var(--bg-elevated); }
+  .dist-bar .seg { height: 100%; transition: all 400ms; }
+  .dist-row { display:flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); }
+
+  /* Scenario sliders */
+  .slider-row { margin-bottom: 16px; }
+  .slider-row label { display:flex; justify-content:space-between; font-size: 12px; color: var(--fg-secondary); margin-bottom: 6px; }
+  .slider-row label .lv { font-family: var(--font-mono); color: var(--fg-primary); }
+  .s-track { height: 4px; background: var(--bg-elevated); border-radius: 2px; position: relative; cursor: pointer; }
+  .s-fill { position: absolute; top: 0; left: 50%; bottom: 0; background: var(--accent-primary); border-radius: 2px; width: 0; box-shadow: 0 0 8px rgba(139, 92, 246,0.4); }
+  .s-fill.neg { background: var(--neg); box-shadow: 0 0 8px rgba(244, 63, 94,0.4); }
+  .s-dot { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 14px; height: 14px; border-radius: 50%; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); cursor: pointer; }
+
+  /* impact readout */
+  .impact-out { background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; text-align: center; margin-top: 16px; }
+  .impact-out .l { font-size: 11px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .impact-out .v { font-family: var(--font-mono); font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; transition: color 300ms; }
+
+  .meta-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 12px; }
+  .meta-grid .mk { color: var(--fg-tertiary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; }
+  .meta-grid .mv { color: var(--fg-primary); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb">
+    <a>Dashboard</a><span class="sep">/</span>
+    <a>Predictions</a><span class="sep">/</span>
+    <span>SPX · 5D forecast · 2026-04-20</span>
+  </div>
+
+  <div class="head">
+    <div>
+      <div class="tag-row">
+        <span class="tag hz">● 5-DAY HORIZON</span>
+        <span class="tag pos">BULLISH</span>
+        <span class="tag lstm">ENSEMBLE · LSTM + TRANSFORMER-L</span>
+      </div>
+      <h1>S&amp;P 500 → <span style="font-family:var(--font-mono); color:var(--pos);">5,264.10</span></h1>
+      <p class="sub">Apex projects the index climbs <b style="color:var(--pos)">+0.87%</b> over the next 5 sessions, driven by semis and financials momentum, with 72% model confidence and a 95% band of [5,198 – 5,332].</p>
+    </div>
+    <div class="head-actions">
+      <button class="act-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+      <button class="act-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>Share</button>
+      <button class="act-btn primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.04 3 5.5l7 7Z"/></svg>Save prediction</button>
+    </div>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi">
+    <div>
+      <div class="l">Current</div>
+      <div class="v">5,218.47</div>
+      <div class="d delta-pos">▲ +0.82% today</div>
+    </div>
+    <div>
+      <div class="l">5-day target</div>
+      <div class="v" style="color:var(--accent-primary)">5,264.10</div>
+      <div class="d delta-pos">▲ +45.63 · +0.87%</div>
+    </div>
+    <div>
+      <div class="l">95% band</div>
+      <div class="v" style="font-size:18px">5,198 – 5,332</div>
+      <div class="d delta-neutral">± 67 pts · ±1.28%</div>
+    </div>
+    <div>
+      <div class="l">Confidence</div>
+      <div style="display:flex; align-items:center; gap: 12px; margin-top: 2px">
+        <div class="ring">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle class="bg" cx="30" cy="30" r="25" fill="none" stroke-width="4"/>
+            <circle class="fg" cx="30" cy="30" r="25" fill="none" stroke-width="4"/>
+          </svg>
+          <div class="n">72%</div>
+        </div>
+        <div style="font-size:11px; color: var(--fg-tertiary); line-height: 1.4">All 3 models<br>agreed on direction</div>
+      </div>
+    </div>
+    <div>
+      <div class="l">Backtest (L28D)</div>
+      <div class="v">74.1%</div>
+      <div class="d delta-pos">directional hit rate</div>
+    </div>
+  </div>
+
+  <!-- MAIN 2-COL -->
+  <div class="grid">
+    <!-- LEFT -->
+    <div>
+      <!-- Big chart -->
+      <div class="big-chart">
+        <div class="bc-head">
+          <div>
+            <h3>Price with projection</h3>
+            <div style="font-size:11px; color: var(--fg-tertiary); margin-top:3px">90D history · 5D forecast · 95% confidence band</div>
+          </div>
+          <div class="controls">
+            <span class="pill">1D</span>
+            <span class="pill">1W</span>
+            <span class="pill">1M</span>
+            <span class="pill on">3M</span>
+            <span class="pill">1Y</span>
+            <span class="pill">5Y</span>
+          </div>
+        </div>
+
+        <svg class="chart" viewBox="0 0 1000 340" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="rgba(139, 92, 246,0.18)"/>
+              <stop offset="1" stop-color="rgba(139, 92, 246,0)"/>
+            </linearGradient>
+            <linearGradient id="forecastGlow" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#8B5CF6"/>
+              <stop offset="1" stop-color="#C4B5FD"/>
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- grid -->
+          <g stroke="rgba(30,35,48,0.6)" stroke-width="1">
+            <line x1="0" y1="60" x2="1000" y2="60"/>
+            <line x1="0" y1="130" x2="1000" y2="130"/>
+            <line x1="0" y1="200" x2="1000" y2="200"/>
+            <line x1="0" y1="270" x2="1000" y2="270"/>
+          </g>
+          <!-- y labels -->
+          <g font-family="JetBrains Mono" font-size="10" fill="#70707A">
+            <text x="8" y="56">5,350</text>
+            <text x="8" y="126">5,250</text>
+            <text x="8" y="196">5,150</text>
+            <text x="8" y="266">5,050</text>
+          </g>
+
+          <!-- history area -->
+          <path d="M0 240 L40 235 L80 230 L120 210 L160 218 L200 195 L240 200 L280 175 L320 180 L360 160 L400 168 L440 145 L480 155 L520 135 L560 142 L600 125 L640 132 L680 115 L720 125 L750 118 L750 340 L0 340 Z" fill="url(#priceFill)"/>
+          <!-- history line -->
+          <path d="M0 240 L40 235 L80 230 L120 210 L160 218 L200 195 L240 200 L280 175 L320 180 L360 160 L400 168 L440 145 L480 155 L520 135 L560 142 L600 125 L640 132 L680 115 L720 125 L750 118"
+                stroke="#EDEDEF" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+          <!-- confidence band -->
+          <path d="M750 118 L800 100 L850 90 L900 82 L950 75 L1000 70 L1000 140 L950 145 L900 152 L850 158 L800 155 L750 118 Z" fill="rgba(139, 92, 246,0.14)"/>
+          <!-- forecast line (dashed glow) -->
+          <path d="M750 118 L800 108 L850 98 L900 88 L950 82 L1000 74"
+                stroke="url(#forecastGlow)" stroke-width="2.2" stroke-dasharray="6 4" fill="none" filter="url(#glow)"/>
+          <!-- divider -->
+          <line x1="750" y1="0" x2="750" y2="340" stroke="#3A3A42" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="758" y="20" font-family="JetBrains Mono" font-size="10" fill="#8B5CF6" font-weight="500">FORECAST →</text>
+          <!-- endpoint pulse -->
+          <circle cx="1000" cy="74" r="4" fill="#8B5CF6" filter="url(#glow)"/>
+          <circle cx="1000" cy="74" r="8" fill="none" stroke="#8B5CF6" stroke-width="1.5" opacity="0.5">
+            <animate attributeName="r" from="4" to="14" dur="1.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" from="0.7" to="0" dur="1.8s" repeatCount="indefinite"/>
+          </circle>
+
+          <!-- x axis ticks -->
+          <g font-family="JetBrains Mono" font-size="9" fill="#70707A">
+            <text x="40" y="330">Jan</text>
+            <text x="220" y="330">Feb</text>
+            <text x="420" y="330">Mar</text>
+            <text x="620" y="330">Apr</text>
+            <text x="820" y="330" fill="#8B5CF6">+5d</text>
+          </g>
+        </svg>
+
+        <div class="chart-foot">
+          <div class="legend">
+            <span><span class="sw" style="background:#EDEDEF"></span>Historical</span>
+            <span><span class="sw" style="background:#8B5CF6"></span>Projection</span>
+            <span><span class="sw" style="background:rgba(139, 92, 246,0.25)"></span>95% band</span>
+          </div>
+          <div>Last updated 2m ago · Next refresh in 3m</div>
+        </div>
+      </div>
+
+      <!-- Attribution row -->
+      <div class="attr-row">
+        <div class="panel">
+          <h3>What's driving the call</h3>
+          <div class="p-sub">Top feature attributions from Transformer-L attention</div>
+          <div class="feat-row">
+            <div class="ft"><div class="nm">Semis momentum</div><div class="bar" style="--w:92%"></div><div class="val dir-up">0.92</div></div>
+            <div class="ft"><div class="nm">XLF relative str.</div><div class="bar" style="--w:78%"></div><div class="val dir-up">0.78</div></div>
+            <div class="ft"><div class="nm">VIX regime shift</div><div class="bar" style="--w:64%"></div><div class="val dir-up">0.64</div></div>
+            <div class="ft"><div class="nm">Breadth (adv/dec)</div><div class="bar" style="--w:58%"></div><div class="val dir-up">0.58</div></div>
+            <div class="ft"><div class="nm">USD strength</div><div class="bar" style="--w:42%"></div><div class="val dir-down">0.42</div></div>
+            <div class="ft"><div class="nm">10Y yield delta</div><div class="bar" style="--w:36%"></div><div class="val dir-down">0.36</div></div>
+            <div class="ft"><div class="nm">Put/call ratio</div><div class="bar" style="--w:28%"></div><div class="val dir-up">0.28</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Model ensemble</h3>
+          <div class="p-sub">Weighted consensus of 3 models</div>
+          <div class="models">
+            <div class="model-card">
+              <div class="mh"><span>LSTM-48</span><span>35%</span></div>
+              <div class="mv">5,261.8</div>
+              <div class="md">+0.83%</div>
+              <div class="weight" style="--w: 35%"></div>
+            </div>
+            <div class="model-card">
+              <div class="mh"><span>TRANSFORMER-L</span><span>45%</span></div>
+              <div class="mv">5,267.2</div>
+              <div class="md">+0.94%</div>
+              <div class="weight" style="--w: 45%"></div>
+            </div>
+            <div class="model-card">
+              <div class="mh"><span>GBM</span><span>20%</span></div>
+              <div class="mv">5,260.5</div>
+              <div class="md">+0.81%</div>
+              <div class="weight" style="--w: 20%"></div>
+            </div>
+          </div>
+
+          <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+            <h3 style="margin-bottom: 6px; font-size: 13px;">Historical accuracy (L28D)</h3>
+            <svg class="hist-chart" viewBox="0 0 500 180" preserveAspectRatio="none">
+              <g stroke="rgba(30,35,48,0.6)" stroke-width="1">
+                <line x1="0" y1="60" x2="500" y2="60"/>
+                <line x1="0" y1="120" x2="500" y2="120"/>
+              </g>
+              <text x="4" y="18" font-family="JetBrains Mono" font-size="9" fill="#70707A">1.0%</text>
+              <text x="4" y="124" font-family="JetBrains Mono" font-size="9" fill="#70707A">0%</text>
+              <!-- bars: green for hits, red for misses -->
+              <g>
+                <rect x="10"  y="40" width="14" height="80" fill="#22C55E" opacity="0.85"/>
+                <rect x="30"  y="55" width="14" height="65" fill="#22C55E" opacity="0.85"/>
+                <rect x="50"  y="120" width="14" height="30" fill="#F43F5E" opacity="0.85"/>
+                <rect x="70"  y="45" width="14" height="75" fill="#22C55E" opacity="0.85"/>
+                <rect x="90"  y="30" width="14" height="90" fill="#22C55E" opacity="0.85"/>
+                <rect x="110" y="60" width="14" height="60" fill="#22C55E" opacity="0.85"/>
+                <rect x="130" y="120" width="14" height="20" fill="#F43F5E" opacity="0.85"/>
+                <rect x="150" y="50" width="14" height="70" fill="#22C55E" opacity="0.85"/>
+                <rect x="170" y="40" width="14" height="80" fill="#22C55E" opacity="0.85"/>
+                <rect x="190" y="35" width="14" height="85" fill="#22C55E" opacity="0.85"/>
+                <rect x="210" y="120" width="14" height="40" fill="#F43F5E" opacity="0.85"/>
+                <rect x="230" y="55" width="14" height="65" fill="#22C55E" opacity="0.85"/>
+                <rect x="250" y="42" width="14" height="78" fill="#22C55E" opacity="0.85"/>
+                <rect x="270" y="50" width="14" height="70" fill="#22C55E" opacity="0.85"/>
+                <rect x="290" y="35" width="14" height="85" fill="#22C55E" opacity="0.85"/>
+                <rect x="310" y="60" width="14" height="60" fill="#22C55E" opacity="0.85"/>
+                <rect x="330" y="120" width="14" height="25" fill="#F43F5E" opacity="0.85"/>
+                <rect x="350" y="45" width="14" height="75" fill="#22C55E" opacity="0.85"/>
+                <rect x="370" y="38" width="14" height="82" fill="#22C55E" opacity="0.85"/>
+                <rect x="390" y="120" width="14" height="35" fill="#F43F5E" opacity="0.85"/>
+                <rect x="410" y="52" width="14" height="68" fill="#22C55E" opacity="0.85"/>
+                <rect x="430" y="40" width="14" height="80" fill="#22C55E" opacity="0.85"/>
+                <rect x="450" y="55" width="14" height="65" fill="#22C55E" opacity="0.85"/>
+                <rect x="470" y="38" width="14" height="82" fill="#22C55E" opacity="0.85"/>
+              </g>
+              <line x1="0" y1="120" x2="500" y2="120" stroke="#3A3A42" stroke-width="1"/>
+            </svg>
+            <div style="display:flex; justify-content:space-between; font-family: var(--font-mono); font-size:11px; color: var(--fg-tertiary); margin-top: 4px">
+              <span>28 days ago</span><span>74.1% hit · 5 misses</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reasoning -->
+      <div class="panel">
+        <h3>Why this prediction?</h3>
+        <div class="p-sub">Plain-English reasoning, sourced from top attention weights</div>
+        <div class="reason pos">
+          <h5>Tech and semis are leading the tape.</h5>
+          <p>XLK is up 2.8% over the trailing 5 sessions with semis (SOXX) +4.1%. Historically when semis lead with breadth &gt; 60%, the index follows through within 3–5 sessions (74% of cases in last 10 years).</p>
+        </div>
+        <div class="reason pos">
+          <h5>Volatility is compressing.</h5>
+          <p>VIX has drifted from 17.8 → 14.2 over 8 sessions, exiting the "elevated" regime. In our training set, this regime change preceded +0.6% median 5D returns.</p>
+        </div>
+        <div class="reason warn">
+          <h5>Countervailing: USD is firming.</h5>
+          <p>DXY up 0.9% WoW adds headwind for multinationals earnings revisions. This is why the confidence is 72% not 85% — the USD signal is pulling against the tape.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT rail -->
+    <div class="rail">
+
+      <!-- Distribution -->
+      <div class="panel">
+        <h3>Outcome distribution</h3>
+        <div class="p-sub">5-day return range · 5,000 Monte Carlo paths</div>
+
+        <div class="dist-bar">
+          <div class="seg" style="background: rgba(244, 63, 94,0.6); width: 14%"></div>
+          <div class="seg" style="background: rgba(244, 63, 94,0.3); width: 14%"></div>
+          <div class="seg" style="background: rgba(58,64,80,0.5); width: 16%"></div>
+          <div class="seg" style="background: rgba(34, 197, 94,0.3); width: 28%"></div>
+          <div class="seg" style="background: rgba(34, 197, 94,0.7); width: 28%"></div>
+        </div>
+        <div class="dist-row">
+          <span>−2%</span><span>−1%</span><span style="color:var(--fg-primary)">0</span><span>+1%</span><span style="color:var(--pos)">+2%</span>
+        </div>
+
+        <div style="margin-top: 20px; display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div><div style="font-size:10px; color:var(--fg-tertiary); text-transform:uppercase; letter-spacing:.05em">P(up)</div><div style="font-family:var(--font-mono); font-size:18px; color:var(--pos); font-weight:500; font-variant-numeric:tabular-nums;">68%</div></div>
+          <div><div style="font-size:10px; color:var(--fg-tertiary); text-transform:uppercase; letter-spacing:.05em">P(flat)</div><div style="font-family:var(--font-mono); font-size:18px; color:var(--fg-secondary); font-weight:500;">14%</div></div>
+          <div><div style="font-size:10px; color:var(--fg-tertiary); text-transform:uppercase; letter-spacing:.05em">P(down)</div><div style="font-family:var(--font-mono); font-size:18px; color:var(--neg); font-weight:500;">18%</div></div>
+          <div><div style="font-size:10px; color:var(--fg-tertiary); text-transform:uppercase; letter-spacing:.05em">Max drawdown</div><div style="font-family:var(--font-mono); font-size:18px; color:var(--fg-primary); font-weight:500;">−2.1%</div></div>
+        </div>
+      </div>
+
+      <!-- What-if sliders -->
+      <div class="panel">
+        <h3>What-if scenario</h3>
+        <div class="p-sub">Move sliders to re-compute the forecast</div>
+
+        <div class="slider-row">
+          <label>Rate change <span class="lv" id="rv">+0.00 pp</span></label>
+          <div class="s-track" id="s-rate"><div class="s-fill" id="f-rate"></div><div class="s-dot" id="d-rate" style="left: 50%"></div></div>
+        </div>
+
+        <div class="slider-row">
+          <label>Inflation surprise <span class="lv" id="iv">+0.0%</span></label>
+          <div class="s-track" id="s-inf"><div class="s-fill" id="f-inf"></div><div class="s-dot" id="d-inf" style="left: 50%"></div></div>
+        </div>
+
+        <div class="slider-row">
+          <label>Oil shock <span class="lv" id="ov">$0</span></label>
+          <div class="s-track" id="s-oil"><div class="s-fill" id="f-oil"></div><div class="s-dot" id="d-oil" style="left: 50%"></div></div>
+        </div>
+
+        <div class="impact-out">
+          <div class="l">Projected change</div>
+          <div class="v" id="iOut" style="color:var(--pos)">+0.87%</div>
+          <div style="font-size:11px; color:var(--fg-tertiary); margin-top: 4px">vs baseline +0.87%</div>
+        </div>
+      </div>
+
+      <!-- Meta -->
+      <div class="panel">
+        <h3>Metadata</h3>
+        <div class="p-sub">&nbsp;</div>
+        <div class="meta-grid">
+          <div><div class="mk">Generated</div><div class="mv">2026-04-20 14:32 UTC</div></div>
+          <div><div class="mk">Expires</div><div class="mv">2026-04-25 16:00 UTC</div></div>
+          <div><div class="mk">Model version</div><div class="mv">ens-v4.2.1</div></div>
+          <div><div class="mk">Training cutoff</div><div class="mv">2026-04-15</div></div>
+          <div><div class="mk">Features</div><div class="mv">148</div></div>
+          <div><div class="mk">Prediction ID</div><div class="mv">pr_X7k2N</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // simple slider implementation
+  function bindSlider(trackId, dotId, fillId, valId, format, baseImpact) {
+    const t = document.getElementById(trackId);
+    const d = document.getElementById(dotId);
+    const f = document.getElementById(fillId);
+    const v = document.getElementById(valId);
+    let dragging = false;
+    function setPct(pct) {
+      pct = Math.max(0, Math.min(100, pct));
+      d.style.left = pct + '%';
+      const delta = pct - 50;
+      if (delta >= 0) {
+        f.classList.remove('neg');
+        f.style.left = '50%'; f.style.right = 'auto'; f.style.width = (delta) + '%';
+      } else {
+        f.classList.add('neg');
+        f.style.left = 'auto'; f.style.right = '50%'; f.style.width = Math.abs(delta) + '%';
+      }
+      const unit = (delta / 50);
+      v.textContent = format(unit);
+      updateOut();
+    }
+    t.addEventListener('mousedown', (e) => { dragging = true; move(e); });
+    document.addEventListener('mousemove', (e) => { if (dragging) move(e); });
+    document.addEventListener('mouseup', () => { dragging = false; });
+    function move(e) {
+      const r = t.getBoundingClientRect();
+      const pct = ((e.clientX - r.left) / r.width) * 100;
+      setPct(pct);
+    }
+    // expose current value (-1 to 1)
+    return () => ((parseFloat(d.style.left) - 50) / 50);
+  }
+  const getR = bindSlider('s-rate', 'd-rate', 'f-rate', 'rv', (u) => (u*0.5 >= 0 ? '+' : '') + (u*0.5).toFixed(2) + ' pp');
+  const getI = bindSlider('s-inf',  'd-inf',  'f-inf',  'iv', (u) => (u*2 >= 0 ? '+' : '') + (u*2).toFixed(1) + '%');
+  const getO = bindSlider('s-oil',  'd-oil',  'f-oil',  'ov', (u) => (u*20 >= 0 ? '$+' : '−$') + Math.abs(u*20).toFixed(0));
+
+  function updateOut() {
+    const base = 0.87;
+    // rough impact model
+    const impact = base + (getR() * -1.8) + (getI() * -0.6) + (getO() * -0.4);
+    const el = document.getElementById('iOut');
+    el.textContent = (impact >= 0 ? '+' : '') + impact.toFixed(2) + '%';
+    el.style.color = impact >= 0.15 ? 'var(--pos)' : impact <= -0.15 ? 'var(--neg)' : 'var(--fg-primary)';
+  }
+</script>
+</body>
+</html>

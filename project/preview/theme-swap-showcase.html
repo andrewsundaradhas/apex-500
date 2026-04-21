@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Apex 500 — Theme Swap</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body { margin: 0; min-height: 100vh; background: #0C0C0E; color: #EDEDEF; font-family: var(--font-sans); overflow-x: hidden; }
+  .page { padding: 60px 40px; max-width: 1400px; margin: 0 auto; }
+
+  .head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 48px; }
+  .head h1 { font-size: 40px; font-weight: 600; letter-spacing: -0.025em; margin: 0 0 8px; }
+  .head p { font-size: 15px; color: #A1A1AA; max-width: 480px; line-height: 1.55; margin: 0; }
+
+  /* Theme toggle switcher */
+  .toggle {
+    display: inline-flex; align-items: center; background: #141416;
+    border: 1px solid #2A2A30; border-radius: 999px; padding: 4px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .toggle button {
+    padding: 9px 18px; background: transparent; border: none; color: #A1A1AA;
+    font-size: 13px; font-weight: 500; font-family: var(--font-sans); cursor: pointer;
+    border-radius: 999px; display: inline-flex; align-items: center; gap: 7px;
+    transition: all 280ms var(--ease-out);
+  }
+  .toggle button.on.dark { background: #1C1C20; color: #EDEDEF; box-shadow: inset 0 0 0 1px #3A3A42; }
+  .toggle button.on.light { background: linear-gradient(135deg, #FFFFFF, #F5F5F4); color: #18181B; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+  /* Side-by-side device mockups */
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    margin-bottom: 60px; position: relative;
+  }
+  .divider-line {
+    position: absolute; left: 50%; top: -20px; bottom: -20px; width: 1px;
+    background: linear-gradient(to bottom, transparent, #2A2A30 20%, #2A2A30 80%, transparent);
+    transform: translateX(-0.5px);
+    z-index: 10;
+  }
+
+  .browser {
+    border-radius: 14px; overflow: hidden; position: relative;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
+    transform-style: preserve-3d;
+    transition: transform 500ms var(--ease-out);
+  }
+  .browser.dark { background: #0C0C0E; }
+  .browser.light { background: #FAFAF9; }
+  .browser:hover { transform: translateY(-4px); }
+
+  .chrome {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px;
+    background: rgba(14,17,24,0.6); backdrop-filter: blur(12px);
+    border-bottom: 1px solid #222226;
+  }
+  .browser.light .chrome { background: rgba(244,246,250,0.9); border-bottom-color: #E4E4E7; }
+  .dots { display: flex; gap: 6px; }
+  .dots span { width: 11px; height: 11px; border-radius: 50%; }
+  .dots .r { background: #EF5F57; } .dots .y { background: #F5BF4F; } .dots .g { background: #62C554; }
+  .url {
+    flex: 1; padding: 5px 12px; background: rgba(30,35,48,0.6); color: #A1A1AA;
+    font-family: var(--font-mono); font-size: 11px; border-radius: 5px; font-variant-numeric: tabular-nums;
+  }
+  .browser.light .url { background: rgba(220,224,232,0.6); color: #52525B; }
+
+  .label-strip {
+    padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .browser.dark .label-strip { color: #70707A; background: #0A0A0C; border-bottom: 1px solid #222226; }
+  .browser.light .label-strip { color: #8A8A93; background: #F5F5F4; border-bottom: 1px solid #F0F0EF; }
+  .label-strip .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px;
+  }
+  .browser.dark .label-strip .dot { background: #26262C; box-shadow: 0 0 10px #8B5CF6; }
+  .browser.light .label-strip .dot { background: #F5F5F4; box-shadow: 0 0 0 2px #8B5CF6; }
+
+  /* Mini dashboard content */
+  .mini { padding: 24px 20px; }
+  .hero-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+
+  .card-d { background: #141416; border: 1px solid #222226; border-radius: 10px; padding: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .card-l { background: #FFFFFF; border: 1px solid #F0F0EF; border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(11,13,20,0.03); }
+
+  .ck { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; font-weight: 500; }
+  .dark .ck { color: #70707A; }
+  .light .ck { color: #8A8A93; }
+
+  .cv { font-family: var(--font-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .dark .cv { color: #EDEDEF; }
+  .light .cv { color: #18181B; }
+
+  .dd { font-family: var(--font-mono); font-size: 11px; margin-top: 3px; color: #22C55E; }
+
+  .spark { width: 100%; height: 36px; margin-top: 8px; }
+
+  /* Big chart row */
+  .big { padding: 18px; border-radius: 10px; margin-bottom: 12px; }
+  .dark .big { background: #141416; border: 1px solid #222226; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .light .big { background: #FFFFFF; border: 1px solid #F0F0EF; box-shadow: 0 1px 3px rgba(11,13,20,0.04); }
+
+  .big-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; font-weight: 500; }
+  .dark .big-head { color: #EDEDEF; }
+  .light .big-head { color: #18181B; }
+  .big-head .pill { padding: 3px 8px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; }
+  .dark .big-head .pill { background: rgba(139, 92, 246,0.15); color: #C4B5FD; }
+  .light .big-head .pill { background: rgba(139, 92, 246,0.1); color: #8B5CF6; }
+
+  .chart-big { width: 100%; height: 180px; display: block; }
+
+  /* Pred cards */
+  .pred-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .pred-card { padding: 12px; border-radius: 8px; }
+  .dark .pred-card { background: #141416; border: 1px solid #222226; }
+  .light .pred-card { background: #FFFFFF; border: 1px solid #F0F0EF; }
+  .pred-card .ph { font-family: var(--font-mono); font-size: 10px; color: #8B5CF6; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .pred-card .pv { font-family: var(--font-mono); font-size: 16px; margin: 4px 0; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .dark .pred-card .pv { color: #EDEDEF; }
+  .light .pred-card .pv { color: #18181B; }
+
+  /* Token crossfade demo */
+  .token-row {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+    margin-bottom: 40px;
+  }
+  .token {
+    padding: 16px 14px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px;
+    transition: all 400ms var(--ease-out);
+  }
+  .token .sw { width: 100%; height: 48px; border-radius: 6px; transition: all 400ms var(--ease-out); }
+  .token .tk { font-family: var(--font-mono); font-size: 10px; }
+  .token .tv { font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+
+  .token[data-slot="0"] .sw { background: var(--bg-canvas); border: 1px solid var(--border-subtle); }
+  .token[data-slot="1"] .sw { background: var(--bg-surface); border: 1px solid var(--border-subtle); }
+  .token[data-slot="2"] .sw { background: var(--bg-elevated); border: 1px solid var(--border-subtle); }
+  .token[data-slot="3"] .sw { background: var(--fg-primary); }
+  .token[data-slot="4"] .sw { background: var(--fg-secondary); }
+  .token[data-slot="5"] .sw { background: var(--accent-primary); box-shadow: 0 0 16px rgba(139, 92, 246,0.3); }
+
+  .token .tk { color: var(--fg-tertiary); }
+  .token .tv { color: var(--fg-primary); }
+
+  .page-preview-dark, .page-preview-light {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 32px;
+    color: var(--fg-primary);
+    box-shadow: inset 0 1px 0 var(--border-highlight);
+  }
+
+  /* animated morph transition visual in the middle */
+  .morph-viz {
+    height: 240px; position: relative; border-radius: 14px; overflow: hidden;
+    background: linear-gradient(90deg, #0C0C0E 0%, #0C0C0E 45%, #FAFAF9 55%, #FAFAF9 100%);
+    border: 1px solid #2A2A30;
+    margin-bottom: 60px; display: grid; place-items: center;
+  }
+  .morph-viz::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, transparent, #8B5CF6, transparent);
+    transform: translateX(-0.5px);
+    box-shadow: 0 0 24px #8B5CF6;
+  }
+  .morph-viz .arrow {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    display: flex; gap: 10px; align-items: center;
+    padding: 12px 20px; background: rgba(139, 92, 246,0.95); color: white;
+    border-radius: 999px; font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(139, 92, 246,0.5), 0 0 0 2px rgba(0,0,0,0.25);
+    animation: morph-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes morph-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 8px 32px rgba(139, 92, 246,0.5), 0 0 0 2px rgba(0,0,0,0.25); }
+    50% { transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 8px 48px rgba(139, 92, 246,0.7), 0 0 0 2px rgba(0,0,0,0.25); }
+  }
+
+  /* Particle side panels */
+  .side-particles {
+    position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden;
+  }
+  .side-particles.l { left: 0; }
+  .side-particles.r { right: 0; }
+  .pp { position: absolute; width: 3px; height: 3px; border-radius: 50%; }
+  .side-particles.l .pp { background: #8B5CF6; box-shadow: 0 0 8px #8B5CF6; }
+  .side-particles.r .pp { background: #8B5CF6; box-shadow: 0 0 8px #8B5CF6; opacity: 0.5; }
+
+  .caption { font-size: 12px; color: #70707A; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; margin: 40px 0 12px; font-weight: 500; }
+
+  .legend {
+    display: flex; justify-content: center; gap: 32px; padding: 20px; margin: 0 auto;
+    font-size: 12px; color: #A1A1AA;
+  }
+  .legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="head">
+    <div>
+      <h1>Dark ↔ Light.<br><span style="background:linear-gradient(90deg,#8B5CF6,#38BDF8); -webkit-background-clip:text; background-clip:text; color:transparent;">Same system, two moods.</span></h1>
+      <p>The dark theme is canonical. Light mode is a first-class alternative — every token remaps, every elevation inverts, every shadow softens. No re-design needed.</p>
+    </div>
+    <div class="toggle">
+      <button class="on dark">🌙 Dark</button>
+      <button class="light">☀ Light</button>
+    </div>
+  </div>
+
+  <!-- Morph viz -->
+  <div class="morph-viz">
+    <div class="side-particles l">
+      <div class="pp" style="left:20%; top:30%"></div>
+      <div class="pp" style="left:60%; top:70%"></div>
+      <div class="pp" style="left:80%; top:20%"></div>
+      <div class="pp" style="left:30%; top:80%"></div>
+      <div class="pp" style="left:45%; top:45%"></div>
+    </div>
+    <div class="side-particles r">
+      <div class="pp" style="left:20%; top:60%"></div>
+      <div class="pp" style="left:50%; top:20%"></div>
+      <div class="pp" style="left:70%; top:80%"></div>
+      <div class="pp" style="left:35%; top:35%"></div>
+    </div>
+    <div class="arrow">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+      Swap theme
+    </div>
+  </div>
+
+  <div class="compare">
+    <div class="divider-line"></div>
+
+    <!-- DARK browser -->
+    <div class="browser dark">
+      <div class="chrome">
+        <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+        <div class="url">apex500.com / dashboard</div>
+      </div>
+      <div class="label-strip"><span><span class="dot"></span>Dark theme · canonical</span><span>07090D</span></div>
+      <div class="mini dark">
+        <div class="hero-row">
+          <div class="card-d">
+            <div class="ck">SPX · LIVE</div>
+            <div class="cv">5,218.47</div>
+            <div class="dd">▲ +0.82%</div>
+            <svg class="spark" viewBox="0 0 200 40" preserveAspectRatio="none">
+              <defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.35)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient></defs>
+              <path d="M0 30 L30 28 L60 22 L90 26 L120 18 L150 14 L180 8 L200 4 L200 40 L0 40 Z" fill="url(#sg1)"/>
+              <path d="M0 30 L30 28 L60 22 L90 26 L120 18 L150 14 L180 8 L200 4" stroke="#EDEDEF" stroke-width="1.3" fill="none"/>
+            </svg>
+          </div>
+          <div class="card-d"><div class="ck">VIX</div><div class="cv">14.2</div><div class="dd" style="color:#22C55E">▼ −1.8%</div></div>
+          <div class="card-d"><div class="ck">NEXT 5D</div><div class="cv" style="color:#C4B5FD">5,264</div><div class="dd">72% conf</div></div>
+        </div>
+
+        <div class="big">
+          <div class="big-head"><span>S&amp;P 500 · 90D · with 5D projection</span><span class="pill">● BULLISH</span></div>
+          <svg class="chart-big" viewBox="0 0 600 180" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="df" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.2)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient>
+            </defs>
+            <g stroke="rgba(30,35,48,0.6)" stroke-width="1"><line x1="0" y1="60" x2="600" y2="60"/><line x1="0" y1="120" x2="600" y2="120"/></g>
+            <path d="M0 130 L40 125 L80 118 L120 108 L160 112 L200 100 L240 95 L280 85 L320 92 L360 78 L400 85 L440 70 L480 78 L500 70 L500 180 L0 180 Z" fill="url(#df)"/>
+            <path d="M0 130 L40 125 L80 118 L120 108 L160 112 L200 100 L240 95 L280 85 L320 92 L360 78 L400 85 L440 70 L480 78 L500 70" stroke="#EDEDEF" stroke-width="1.5" fill="none"/>
+            <path d="M500 70 L540 60 L580 50 L600 42" stroke="#8B5CF6" stroke-width="1.8" stroke-dasharray="5 3" fill="none" style=""/>
+            <path d="M500 70 L540 50 L580 40 L600 32 L600 60 L580 60 L540 70 L500 70 Z" fill="rgba(139, 92, 246,0.14)"/>
+            <line x1="500" y1="0" x2="500" y2="180" stroke="#3A3A42" stroke-dasharray="3 3"/>
+            <circle cx="600" cy="42" r="3.5" fill="#8B5CF6"/>
+          </svg>
+        </div>
+
+        <div class="pred-row">
+          <div class="pred-card"><div class="ph">● 1D</div><div class="pv">5,225</div><div class="dd">+0.14%</div></div>
+          <div class="pred-card"><div class="ph">● 5D</div><div class="pv">5,264</div><div class="dd">+0.87%</div></div>
+          <div class="pred-card"><div class="ph">● 30D</div><div class="pv">5,342</div><div class="dd">+2.38%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIGHT browser -->
+    <div class="browser light">
+      <div class="chrome">
+        <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+        <div class="url">apex500.com / dashboard</div>
+      </div>
+      <div class="label-strip"><span><span class="dot"></span>Light theme · opt-in</span><span>FAFBFC</span></div>
+      <div class="mini light">
+        <div class="hero-row">
+          <div class="card-l">
+            <div class="ck">SPX · LIVE</div>
+            <div class="cv">5,218.47</div>
+            <div class="dd">▲ +0.82%</div>
+            <svg class="spark" viewBox="0 0 200 40" preserveAspectRatio="none">
+              <defs><linearGradient id="sgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.2)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient></defs>
+              <path d="M0 30 L30 28 L60 22 L90 26 L120 18 L150 14 L180 8 L200 4 L200 40 L0 40 Z" fill="url(#sgl)"/>
+              <path d="M0 30 L30 28 L60 22 L90 26 L120 18 L150 14 L180 8 L200 4" stroke="#18181B" stroke-width="1.3" fill="none"/>
+            </svg>
+          </div>
+          <div class="card-l"><div class="ck">VIX</div><div class="cv">14.2</div><div class="dd" style="color:#16A34A">▼ −1.8%</div></div>
+          <div class="card-l"><div class="ck">NEXT 5D</div><div class="cv" style="color:#8B5CF6">5,264</div><div class="dd" style="color:#8B5CF6">72% conf</div></div>
+        </div>
+
+        <div class="big">
+          <div class="big-head"><span>S&amp;P 500 · 90D · with 5D projection</span><span class="pill">● BULLISH</span></div>
+          <svg class="chart-big" viewBox="0 0 600 180" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139, 92, 246,0.15)"/><stop offset="1" stop-color="rgba(139, 92, 246,0)"/></linearGradient>
+            </defs>
+            <g stroke="rgba(229,232,240,0.9)" stroke-width="1"><line x1="0" y1="60" x2="600" y2="60"/><line x1="0" y1="120" x2="600" y2="120"/></g>
+            <path d="M0 130 L40 125 L80 118 L120 108 L160 112 L200 100 L240 95 L280 85 L320 92 L360 78 L400 85 L440 70 L480 78 L500 70 L500 180 L0 180 Z" fill="url(#lf)"/>
+            <path d="M0 130 L40 125 L80 118 L120 108 L160 112 L200 100 L240 95 L280 85 L320 92 L360 78 L400 85 L440 70 L480 78 L500 70" stroke="#18181B" stroke-width="1.5" fill="none"/>
+            <path d="M500 70 L540 60 L580 50 L600 42" stroke="#8B5CF6" stroke-width="1.8" stroke-dasharray="5 3" fill="none"/>
+            <path d="M500 70 L540 50 L580 40 L600 32 L600 60 L580 60 L540 70 L500 70 Z" fill="rgba(139, 92, 246,0.1)"/>
+            <line x1="500" y1="0" x2="500" y2="180" stroke="#D4D4D8" stroke-dasharray="3 3"/>
+            <circle cx="600" cy="42" r="3.5" fill="#8B5CF6"/>
+          </svg>
+        </div>
+
+        <div class="pred-row">
+          <div class="pred-card"><div class="ph">● 1D</div><div class="pv">5,225</div><div class="dd" style="color:#16A34A">+0.14%</div></div>
+          <div class="pred-card"><div class="ph">● 5D</div><div class="pv">5,264</div><div class="dd" style="color:#16A34A">+0.87%</div></div>
+          <div class="pred-card"><div class="ph">● 30D</div><div class="pv">5,342</div><div class="dd" style="color:#16A34A">+2.38%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token remap legend -->
+  <div class="caption">Token remap · 6 surface roles, two themes</div>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 60px;">
+
+    <div>
+      <div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#70707A; margin-bottom:10px;">🌙 Dark theme</div>
+      <div style="background:#0C0C0E; border: 1px solid #222226; border-radius: 12px; padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <div style="padding:12px; background:#0C0C0E; border: 1px solid #222226; border-radius: 6px;"><div style="height:36px; background:#0C0C0E; border:1px solid #2A2A30; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#70707A">--bg-canvas</div><div style="font-family:var(--font-mono); font-size:10px; color:#EDEDEF">#0C0C0E</div></div>
+        <div style="padding:12px; background:#141416; border: 1px solid #222226; border-radius: 6px;"><div style="height:36px; background:#141416; border:1px solid #2A2A30; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#70707A">--bg-surface</div><div style="font-family:var(--font-mono); font-size:10px; color:#EDEDEF">#141416</div></div>
+        <div style="padding:12px; background:#1C1C20; border: 1px solid #222226; border-radius: 6px;"><div style="height:36px; background:#1C1C20; border:1px solid #2A2A30; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#70707A">--bg-elevated</div><div style="font-family:var(--font-mono); font-size:10px; color:#EDEDEF">#1C1C20</div></div>
+        <div style="padding:12px; background:#0C0C0E; border: 1px solid #222226; border-radius: 6px;"><div style="height:36px; background:#EDEDEF; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#70707A">--fg-primary</div><div style="font-family:var(--font-mono); font-size:10px; color:#EDEDEF">#EDEDEF</div></div>
+        <div style="padding:12px; background:#0C0C0E; border: 1px solid #222226; border-radius: 6px;"><div style="height:36px; background:#A1A1AA; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#70707A">--fg-secondary</div><div style="font-family:var(--font-mono); font-size:10px; color:#EDEDEF">#A1A1AA</div></div>
+        <div style="padding:12px; background:#0C0C0E; border: 1px solid #222226; border-radius: 6px;"><div style="height:36px; background:#8B5CF6; border-radius:4px; margin-bottom:8px; box-shadow: 0 0 12px rgba(139, 92, 246,0.35);"></div><div style="font-family:var(--font-mono); font-size:10px; color:#70707A">--accent</div><div style="font-family:var(--font-mono); font-size:10px; color:#C4B5FD">#8B5CF6</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#70707A; margin-bottom:10px;">☀ Light theme</div>
+      <div style="background:#FAFAF9; border: 1px solid #F0F0EF; border-radius: 12px; padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <div style="padding:12px; background:#FAFAF9; border: 1px solid #F0F0EF; border-radius: 6px;"><div style="height:36px; background:#FAFAF9; border:1px solid #E4E4E7; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#8A8A93">--bg-canvas</div><div style="font-family:var(--font-mono); font-size:10px; color:#18181B">#FAFAF9</div></div>
+        <div style="padding:12px; background:#FFFFFF; border: 1px solid #F0F0EF; border-radius: 6px; box-shadow: 0 1px 2px rgba(11,13,20,0.03);"><div style="height:36px; background:#FFFFFF; border:1px solid #E4E4E7; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#8A8A93">--bg-surface</div><div style="font-family:var(--font-mono); font-size:10px; color:#18181B">#FFFFFF</div></div>
+        <div style="padding:12px; background:#F5F5F4; border: 1px solid #F0F0EF; border-radius: 6px;"><div style="height:36px; background:#F5F5F4; border:1px solid #E4E4E7; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#8A8A93">--bg-elevated</div><div style="font-family:var(--font-mono); font-size:10px; color:#18181B">#F5F5F4</div></div>
+        <div style="padding:12px; background:#FFFFFF; border: 1px solid #F0F0EF; border-radius: 6px;"><div style="height:36px; background:#18181B; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#8A8A93">--fg-primary</div><div style="font-family:var(--font-mono); font-size:10px; color:#18181B">#18181B</div></div>
+        <div style="padding:12px; background:#FFFFFF; border: 1px solid #F0F0EF; border-radius: 6px;"><div style="height:36px; background:#52525B; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#8A8A93">--fg-secondary</div><div style="font-family:var(--font-mono); font-size:10px; color:#18181B">#52525B</div></div>
+        <div style="padding:12px; background:#FFFFFF; border: 1px solid #F0F0EF; border-radius: 6px;"><div style="height:36px; background:#8B5CF6; border-radius:4px; margin-bottom:8px;"></div><div style="font-family:var(--font-mono); font-size:10px; color:#8A8A93">--accent</div><div style="font-family:var(--font-mono); font-size:10px; color:#8B5CF6">#8B5CF6 (stable)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:#8B5CF6; box-shadow:0 0 8px #8B5CF6"></span>Accent is theme-invariant</span>
+    <span><span class="swatch" style="background:#22C55E"></span>Semantic color ranges adjust by theme</span>
+    <span><span class="swatch" style="background:#EDEDEF"></span>FG/BG stacks fully mirror</span>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex 500 — Dashboard</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(800px 600px at 15% -10%, rgba(139, 92, 246,0.07), transparent 60%),
+      var(--bg-canvas);
+  }
+  #root { height: 100vh; display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="src/primitives.jsx"></script>
+<script type="text/babel" src="src/Sidebar.jsx"></script>
+<script type="text/babel" src="src/TopBar.jsx"></script>
+<script type="text/babel" src="src/HeroChart.jsx"></script>
+<script type="text/babel" src="src/PredictionCards.jsx"></script>
+<script type="text/babel" src="src/SectorAndCorrelation.jsx"></script>
+<script type="text/babel" src="src/RightPanel.jsx"></script>
+<script type="text/babel" src="src/Interactions.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function App() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [active, setActive] = useState('dashboard');
+  const [timeframe, setTimeframe] = useState('1M');
+  const [risk, setRisk] = useState('moderate');
+  const [palette, setPalette] = useState(false);
+
+  useEffect(() => {
+    const h = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setPalette(p => !p); }
+      if (e.key === 'Escape') setPalette(false);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }} data-screen-label="01 Dashboard">
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} active={active} onNav={setActive} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <TopBar onOpenPalette={() => setPalette(true)} riskProfile={risk} onRiskChange={setRisk} />
+        <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+          {/* Main canvas */}
+          <main style={{ flex: 1, overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+            <HeroChart timeframe={timeframe} onTimeframe={setTimeframe} />
+            <div>
+              <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--fg-tertiary)', fontWeight: 500, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                AI predictions <Pill tone="ai" dot glow>3 active models</Pill>
+              </div>
+              <PredictionCards />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
+              <SectorHeatmap />
+              <CorrelationMatrix />
+            </div>
+            <WhatIfPanel />
+          </main>
+
+          {/* Right panel */}
+          <aside style={{ width: 360, flexShrink: 0, borderLeft: '1px solid var(--border-subtle)', background: 'var(--bg-canvas)', overflow: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <InsightPanel />
+            <SentimentMeter />
+            <Watchlist />
+            <NewsTicker />
+          </aside>
+        </div>
+      </div>
+      {palette && <CommandPalette onClose={() => setPalette(false)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

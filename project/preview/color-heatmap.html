@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 20px;
+  }
+  .scale { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 14px; }
+  .step { height: 40px; border-radius: var(--radius-sm); display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.7); }
+  .caption { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); margin-bottom: 8px; }
+  .example {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 2px;
+  }
+  .example .tile {
+    aspect-ratio: 1; border-radius: 3px;
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 9px;
+    color: rgba(255,255,255,0.88);
+  }
+  .label { font-size: 11px; color: var(--fg-tertiary); text-transform: uppercase; letter-spacing: 0.02em; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="caption"><span>−3%</span><span>Sector heatmap divergent scale</span><span>+3%</span></div>
+    <div class="scale">
+      <div class="step" style="background:#7F1D1D">−3</div>
+      <div class="step" style="background:#B91C1C">−2</div>
+      <div class="step" style="background:#F43F5E">−1</div>
+      <div class="step" style="background:#222226; color:#A1A1AA">0</div>
+      <div class="step" style="background:#22C55E">+1</div>
+      <div class="step" style="background:#047857">+2</div>
+      <div class="step" style="background:#065F46">+3</div>
+    </div>
+
+    <div class="label">Sample sector grid</div>
+    <div class="example" style="margin-top:8px">
+      <div class="tile" style="background:#F43F5E">XLK</div>
+      <div class="tile" style="background:#22C55E">XLF</div>
+      <div class="tile" style="background:#047857">XLE</div>
+      <div class="tile" style="background:#222226; color:#A1A1AA">XLV</div>
+      <div class="tile" style="background:#B91C1C">XLY</div>
+      <div class="tile" style="background:#22C55E">XLI</div>
+      <div class="tile" style="background:#F43F5E">XLP</div>
+      <div class="tile" style="background:#065F46">XLU</div>
+      <div class="tile" style="background:#22C55E">XLB</div>
+      <div class="tile" style="background:#222226; color:#A1A1AA">XLRE</div>
+      <div class="tile" style="background:#F43F5E">XLC</div>
+    </div>
+  </div>
+</body>
+</html>

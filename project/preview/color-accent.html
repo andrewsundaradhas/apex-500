@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+  }
+  .accent-hero {
+    height: 120px;
+    background: var(--accent-primary);
+    border-radius: var(--radius-md);
+    position: relative;
+    display: grid;
+    place-items: center;
+    box-shadow: var(--accent-glow-lg);
+  }
+  .accent-hero .name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: white;
+    opacity: 0.9;
+  }
+  .swatches { display: flex; flex-direction: column; gap: 8px; }
+  .sw {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+  .sw .dot { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
+  .sw .lbl { font-size: 12px; color: var(--fg-primary); }
+  .sw .hex { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); margin-left: auto; }
+  .usage {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+  .btn {
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .chip-accent {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+    border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.02em; text-transform: uppercase;
+    align-self: flex-start;
+  }
+  .chip-accent::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary); box-shadow: var(--accent-glow); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="accent-hero">
+      <span class="name">#8B5CF6</span>
+    </div>
+    <div class="swatches">
+      <div class="sw"><div class="dot" style="background:#8B5CF6"></div><span class="lbl">accent-primary</span><span class="hex">#8B5CF6</span></div>
+      <div class="sw"><div class="dot" style="background:#A78BFA"></div><span class="lbl">accent-hover</span><span class="hex">#A78BFA</span></div>
+      <div class="sw"><div class="dot" style="background:#7C3AED"></div><span class="lbl">accent-press</span><span class="hex">#7C3AED</span></div>
+      <div class="sw"><div class="dot" style="background:rgba(139, 92, 246,0.12)"></div><span class="lbl">accent-soft</span><span class="hex">12% α</span></div>
+    </div>
+    <div class="usage">
+      <button class="btn">New prediction</button>
+      <span class="chip-accent">AI forecast</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bg-canvas); }
+  .wrap {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+  .cell { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .block {
+    width: 100%; height: 80px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .block-popover { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--border-default); background: var(--bg-overlay); }
+  .block-glow { box-shadow: 0 0 32px rgba(139, 92, 246,0.6); background: var(--bg-surface); border-color: var(--accent-primary); }
+  .name { font-size: 12px; font-weight: 500; color: var(--fg-primary); }
+  .note { font-size: 11px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="cell">
+      <div class="block"></div>
+      <span class="name">Card — hairline + inset highlight</span>
+      <span class="note">1px #222226 + inset rgba(255,255,255,.03)</span>
+    </div>
+    <div class="cell">
+      <div class="block block-popover"></div>
+      <span class="name">Popover / menu</span>
+      <span class="note">0 8px 24px rgba(0,0,0,.4)</span>
+    </div>
+    <div class="cell">
+      <div class="block block-glow"></div>
+      <span class="name">Accent glow — prediction, live</span>
+      <span class="note">0 0 32px rgba(139, 92, 246,.6)</span>
+    </div>
+  </div>
+</body>
+</html>

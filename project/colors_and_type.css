@@ -1,0 +1,317 @@
+/* ============================================================
+   Apex 500 — Design Tokens · v2 "Slate"
+   Modern fintech aesthetic — warmer neutrals, restrained accent,
+   near-black canvas, no glows. Inspired by Mercury, Ramp, Linear.
+   Dark-mode first. Light mode opt-in via [data-theme="light"].
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---------- COLOR — Background stack (dark, warm-neutral) ----------
+     Shifted from cold-blue (#07090D) to warm-charcoal (#0E0E10) —
+     reads as "sophisticated matte black" vs "gamer RGB". Steps are
+     smaller and more even, creating subtler elevation. */
+  --bg-canvas:      #0C0C0E;  /* app background, warm near-black */
+  --bg-surface:     #141416;  /* cards, panels */
+  --bg-elevated:    #1C1C20;  /* hover, selected, menus */
+  --bg-overlay:     #26262C;  /* tooltips, popovers, modals */
+
+  /* ---------- COLOR — Foreground stack (dark) ----------
+     Warm off-white primary (not pure white) + neutral grays.
+     Less saturated so numbers don't vibrate. */
+  --fg-primary:     #EDEDEF;  /* headings, metric values */
+  --fg-secondary:   #A1A1AA;  /* body, labels */
+  --fg-tertiary:    #70707A;  /* muted, placeholder, disabled */
+  --fg-quaternary:  #46464E;  /* dividers, subtle icons */
+
+  /* ---------- COLOR — Borders ----------
+     Softer, lower-contrast. Slack/Mercury use barely-there borders. */
+  --border-subtle:  #222226;
+  --border-default: #2A2A30;
+  --border-strong:  #3A3A42;
+  --border-highlight: rgba(255, 255, 255, 0.04);  /* inset top */
+
+  /* ---------- COLOR — Accent (Mercury-inspired violet) ----------
+     Softer, more sophisticated purple. Lower saturation than electric
+     indigo. Feels considered, not "tech demo". */
+  --accent-primary:    #8B5CF6;
+  --accent-hover:      #A78BFA;
+  --accent-press:      #7C3AED;
+  --accent-soft:       rgba(139, 92, 246, 0.10);
+  --accent-softer:     rgba(139, 92, 246, 0.05);
+  --accent-glow:       none;          /* no glows — modern apps don't do this */
+  --accent-glow-lg:    none;
+
+  /* Deep purple / aubergine tints — for tinted surfaces, section accents,
+     hero panels. Used sparingly to add warmth to the near-black canvas. */
+  --purple-deep:       #1A0F2E;  /* tinted surface — cards, hero panels */
+  --purple-deeper:     #13091F;  /* canvas-adjacent tint */
+  --purple-midnight:   #241640;  /* elevated tinted surface */
+  --purple-plum:       #3A2260;  /* bordered highlight, chips */
+  --purple-border:     rgba(139, 92, 246, 0.18);
+  --purple-tint-1:     rgba(139, 92, 246, 0.04);
+  --purple-tint-2:     rgba(139, 92, 246, 0.08);
+
+  /* ---------- COLOR — Semantic ----------
+     Robinhood/Stripe green + crisp red. Lower-saturation than v1 so
+     cards don't feel like a slot machine. */
+  --pos:             #22C55E;   /* positive / bullish */
+  --pos-hover:       #4ADE80;
+  --pos-soft:        rgba(34, 197, 94, 0.10);
+  --pos-glow:        none;
+
+  --neg:             #F43F5E;   /* negative / bearish — pinker red, more modern */
+  --neg-hover:       #FB7185;
+  --neg-soft:        rgba(244, 63, 94, 0.10);
+  --neg-glow:        none;
+
+  --warn:            #EAB308;
+  --warn-soft:       rgba(234, 179, 8, 0.10);
+
+  --info:            #38BDF8;
+  --info-soft:       rgba(56, 189, 248, 0.10);
+
+  /* ---------- COLOR — Chart ---------- */
+  --chart-grid:        rgba(42, 42, 48, 0.8);
+  --chart-axis:        #46464E;
+  --chart-price:       #EDEDEF;
+  --chart-prediction:  #8B5CF6;
+  --chart-ci-band:     rgba(139, 92, 246, 0.12);
+  --chart-volume:      rgba(112, 112, 122, 0.35);
+  --chart-ma-fast:     #38BDF8;
+  --chart-ma-slow:     #EAB308;
+
+  /* Sector heatmap divergent scale */
+  --heat-neg-3:        #881337;
+  --heat-neg-2:        #BE123C;
+  --heat-neg-1:        #F43F5E;
+  --heat-zero:         #222226;
+  --heat-pos-1:        #22C55E;
+  --heat-pos-2:        #15803D;
+  --heat-pos-3:        #14532D;
+
+  /* ---------- TYPE — Families ---------- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ---------- TYPE — Scale ---------- */
+  --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px; --fs-16: 16px;
+  --fs-20: 20px; --fs-24: 24px; --fs-32: 32px; --fs-48: 48px;
+
+  /* ---------- TYPE — Weights ---------- */
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  /* ---------- TYPE — Line heights ---------- */
+  --lh-tight:   1.0;
+  --lh-metric:  1.2;
+  --lh-snug:    1.35;
+  --lh-body:    1.5;
+
+  /* ---------- TYPE — Tracking ---------- */
+  --tracking-label:   0.02em;
+  --tracking-display: -0.01em;
+  --tracking-hero:    -0.02em;
+
+  /* ---------- SPACING (4px grid) ---------- */
+  --sp-1:  4px;  --sp-2:  8px;  --sp-3:  12px; --sp-4:  16px; --sp-5:  20px;
+  --sp-6:  24px; --sp-8:  32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+
+  /* ---------- RADIUS ----------
+     Slightly larger radii — current-gen apps use ~8/12/16 not 6/10/14. */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* ---------- SHADOW / ELEVATION ----------
+     Softer, darker, no colored glows. Modern apps layer with opacity. */
+  --shadow-card:    inset 0 1px 0 var(--border-highlight);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.48), 0 0 0 1px var(--border-default);
+  --shadow-modal:   0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-default);
+  --shadow-glow-accent: none;
+  --shadow-glow-pos:    none;
+  --shadow-glow-neg:    none;
+
+  /* ---------- MOTION ---------- */
+  --dur-fast:     120ms;
+  --dur-base:     200ms;
+  --dur-slow:     400ms;
+  --dur-glacial:  800ms;
+  --ease-out:       cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out:    cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-linear:    linear;
+
+  /* ---------- LAYOUT CHROME ---------- */
+  --nav-width:          240px;
+  --nav-width-collapsed: 64px;
+  --topbar-height:      56px;
+  --insight-width:      360px;
+
+  /* ---------- Z ---------- */
+  --z-nav: 10; --z-topbar: 20; --z-popover: 50;
+  --z-modal: 100; --z-ticker: 200; --z-toast: 300;
+}
+
+/* Light theme — warm off-white, Mercury/Ramp/Linear-style */
+[data-theme="light"] {
+  --bg-canvas:      #FAFAF9;  /* warm paper, not cold gray */
+  --bg-surface:     #FFFFFF;
+  --bg-elevated:    #F5F5F4;
+  --bg-overlay:     #FFFFFF;
+
+  --fg-primary:     #18181B;
+  --fg-secondary:   #52525B;
+  --fg-tertiary:    #8A8A93;
+  --fg-quaternary:  #D4D4D8;
+
+  --border-subtle:  #F0F0EF;
+  --border-default: #E4E4E7;
+  --border-strong:  #D4D4D8;
+  --border-highlight: rgba(0, 0, 0, 0.02);
+
+  --chart-grid:     rgba(228, 228, 231, 0.9);
+  --chart-axis:     #D4D4D8;
+  --chart-price:    #18181B;
+
+  --shadow-popover: 0 8px 24px rgba(24, 24, 27, 0.06), 0 0 0 1px var(--border-default);
+  --shadow-modal:   0 24px 64px rgba(24, 24, 27, 0.1), 0 0 0 1px var(--border-default);
+}
+
+/* ============================================================
+   Base styles & semantic aliases
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  line-height: var(--lh-body);
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.num, .mono, code, kbd, samp {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "zero";
+}
+
+h1, .h1 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-48);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-hero);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+h2, .h2 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-32);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-display);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+h3, .h3 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-display);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+h4, .h4 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+p, .body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+  color: var(--fg-secondary);
+  margin: 0;
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--fg-tertiary);
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-32);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-metric);
+  letter-spacing: var(--tracking-display);
+  color: var(--fg-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-value--sm { font-size: var(--fs-24); }
+
+.ticker {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--fg-primary);
+}
+
+.delta-pos { color: var(--pos); font-variant-numeric: tabular-nums; }
+.delta-neg { color: var(--neg); font-variant-numeric: tabular-nums; }
+.delta-neutral { color: var(--fg-secondary); font-variant-numeric: tabular-nums; }
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-5);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); background-clip: content-box; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--accent-primary);
+  border-radius: var(--radius-sm);
+}
