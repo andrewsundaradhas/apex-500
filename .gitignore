@@ -27,3 +27,21 @@ Thumbs.db
 *.log
 .env
 .env.local
+.env.*.local
+.env.production
+.env.development
+
+# Secrets / credentials — never commit
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa
+id_rsa.pub
+secrets.json
+credentials.json
+service-account.json
+gha-token.txt

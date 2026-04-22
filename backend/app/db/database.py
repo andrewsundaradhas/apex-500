@@ -151,19 +151,40 @@ def init_db() -> None:
     with cursor() as c:
         c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (1)")
 
-    # Seed a demo user so the frontend works out-of-the-box
+    _seed_demo_user()
+
+
+def _seed_demo_user() -> None:
+    """Seed a demo user so the frontend works out-of-the-box in dev.
+
+    Skipped entirely in production unless `APEX_DEMO_USER=1` — public instances
+    shouldn't ship with a known-password account. When enabled in production,
+    the password comes from `APEX_DEMO_PASSWORD` (no default).
+    """
+    import os
+    env = os.environ.get("APEX_ENV", "development").lower()
+    if env == "production" and os.environ.get("APEX_DEMO_USER", "0") != "1":
+        return
+
+    demo_pw = os.environ.get("APEX_DEMO_PASSWORD", "demo")
+    if env == "production" and demo_pw == "demo":
+        # Refuse to seed a public instance with the documented default password.
+        return
+
     with cursor() as c:
         existing = c.execute("SELECT id FROM users WHERE email = ?", ("demo@apex500.dev",)).fetchone()
-        if not existing:
-            import bcrypt
-            pw = bcrypt.hashpw(b"demo", bcrypt.gensalt(rounds=4)).decode()
-            c.execute(
-                "INSERT INTO users (email, password_hash, name, firm) VALUES (?, ?, ?, ?)",
-                ("demo@apex500.dev", pw, "Jamie Ryder", "Lighthouse Capital"),
-            )
-            uid = c.lastrowid
-            for t in ["SPX", "NDX", "DJI", "VIX", "AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "META"]:
-                c.execute("INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)", (uid, t))
+        if existing:
+            return
+        import bcrypt
+        rounds = int(os.environ.get("APEX_BCRYPT_ROUNDS", "12"))
+        pw = bcrypt.hashpw(demo_pw.encode()[:72], bcrypt.gensalt(rounds=rounds)).decode()
+        c.execute(
+            "INSERT INTO users (email, password_hash, name, firm) VALUES (?, ?, ?, ?)",
+            ("demo@apex500.dev", pw, "Jamie Ryder", "Lighthouse Capital"),
+        )
+        uid = c.lastrowid
+        for t in ["SPX", "NDX", "DJI", "VIX", "AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "META"]:
+            c.execute("INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)", (uid, t))
 
 
 def prune_old_predictions(keep_per_ticker: int = 500) -> int:

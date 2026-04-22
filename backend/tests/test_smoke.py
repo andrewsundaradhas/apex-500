@@ -162,7 +162,7 @@ def test_metrics_predictions():
 
 def test_auth_signup_login():
     r = client.post("/api/auth/signup", json={
-        "email": "test-smoke@apex500.dev", "password": "pw123", "name": "Smoke Test"
+        "email": "test-smoke@apex500.dev", "password": "smoke-pass-1", "name": "Smoke Test"
     })
     assert r.status_code in (200, 400)  # 400 if already exists
     r = client.post("/api/auth/login", json={
@@ -170,6 +170,13 @@ def test_auth_signup_login():
     })
     assert r.status_code == 200
     assert "token" in r.json()
+
+
+def test_auth_rejects_short_password():
+    r = client.post("/api/auth/signup", json={
+        "email": "weakpw@apex500.dev", "password": "short", "name": "Weak"
+    })
+    assert r.status_code == 422  # pydantic validation rejects <8 chars
 
 
 def test_export_csv():
