@@ -1,32 +1,44 @@
 """Gradient-boosted regression for return forecasting.
 
-sklearn GradientBoostingRegressor on the centralized feature matrix.
+sklearn GradientBoostingRegressor. Accepts either a close-only series (legacy
+signature) or a full OHLCV dataframe with optional macro + sentiment context.
 """
 from __future__ import annotations
 
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import GradientBoostingRegressor
 
-from .features import feature_matrix
+from .features import feature_matrix, feature_matrix_ohlcv
 
 log = logging.getLogger("apex.ml.boost")
 
 
-def boost_forecast(series: pd.Series, horizon: int = 5) -> Dict:
-    """Predict the return `horizon` steps ahead, then back out a target price.
+def boost_forecast(
+    data: pd.Series | pd.DataFrame,
+    horizon: int = 5,
+    macro: Optional[dict] = None,
+    sentiment: Optional[float] = None,
+) -> Dict:
+    """Predict the return `horizon` steps ahead; back out a target price.
 
-    Returns feature_importances too — handy for the frontend's signal panel.
+    Accepts either a close-only series or a full OHLCV DataFrame. When given
+    a DataFrame plus optional macro/sentiment, uses the extended feature set.
     """
-    X, cols = feature_matrix(series)
+    if isinstance(data, pd.DataFrame) and "close" in data.columns:
+        series = data["close"]
+        X, cols = feature_matrix_ohlcv(data, macro=macro, sentiment=sentiment)
+    else:
+        series = data
+        X, cols = feature_matrix(series)
+
     if len(X) < 50:
         last = float(series.iloc[-1])
         return {"forecast": [last] * horizon, "confidence": 0.55, "model": "Boost-fallback", "feature_importance": {}}
 
-    # Label: forward return over horizon
     y = (series.shift(-horizon) / series - 1).reindex(X.index).dropna()
     X = X.loc[y.index]
 
@@ -48,10 +60,8 @@ def boost_forecast(series: pd.Series, horizon: int = 5) -> Dict:
     pred_ret = float(gb.predict(X.iloc[-1:].values)[0])
 
     current = float(series.iloc[-1])
-    # Distribute the total return roughly linearly across steps
     forecast = [current * (1 + pred_ret * (i + 1) / horizon) for i in range(horizon)]
 
-    # Confidence: bounded transform of validation R² (R² can be negative on OOS data)
     conf = float(max(0.55, min(0.88, 0.70 + val_r2 * 0.3)))
 
     importance = dict(sorted(
@@ -62,8 +72,9 @@ def boost_forecast(series: pd.Series, horizon: int = 5) -> Dict:
     return {
         "forecast": forecast,
         "confidence": round(conf, 3),
-        "model": "GradientBoost",
+        "model": "GradientBoost" if isinstance(data, pd.Series) else "GradientBoost-XL",
         "feature_importance": {k: round(v, 4) for k, v in importance.items()},
         "val_r2": round(val_r2, 3),
         "predicted_return": round(pred_ret, 4),
+        "n_features": len(cols),
     }

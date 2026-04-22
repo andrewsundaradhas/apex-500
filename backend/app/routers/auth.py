@@ -1,4 +1,5 @@
 """Auth endpoints — JWT-based. Intentionally simple; demo-grade."""
+import os
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -10,9 +11,9 @@ from ..db.database import cursor
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-SECRET = "apex-dev-secret-replace-in-prod"
+SECRET = os.environ.get("APEX_JWT_SECRET", "apex-dev-secret-replace-in-prod")
 ALGO = "HS256"
-TTL_MINUTES = 60 * 24
+TTL_MINUTES = int(os.environ.get("APEX_JWT_TTL_MIN", "1440"))
 
 
 class LoginIn(BaseModel):

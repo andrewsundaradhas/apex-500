@@ -10,13 +10,16 @@ export default function PredictionDetail() {
   const navigate = useNavigate();
   const [ticker, horizonKey] = (id || 'spx-5d').split('-');
   const [data, setData] = useState(null);
+  const [quote, setQuote] = useState(null);
 
   useEffect(() => {
     const h = horizonKey === '1d' ? '1d' : horizonKey === '1m' ? '1m' : '5d';
-    api.predict(ticker.toUpperCase(), h, 'ensemble').then(setData).catch(() => {});
+    const t = ticker.toUpperCase();
+    api.predict(t, h, 'ensemble').then(setData).catch(() => {});
+    api.quote(t).then(setQuote).catch(() => {});
   }, [ticker, horizonKey]);
 
-  const current = 5218.47;
+  const current = quote?.price ?? data?.series?.[0] ?? 5218.47;
   const target = data?.target || 5264.10;
   const delta = data?.delta_pct || 0.87;
   const conf = Math.round((data?.confidence || 0.72) * 100);

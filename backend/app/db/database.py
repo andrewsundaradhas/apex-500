@@ -140,7 +140,16 @@ def init_db() -> None:
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS schema_version (
+            version INTEGER PRIMARY KEY,
+            applied_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
         """)
+
+    # Record schema version so future Alembic-style migrations have a base.
+    with cursor() as c:
+        c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (1)")
 
     # Seed a demo user so the frontend works out-of-the-box
     with cursor() as c:
@@ -155,3 +164,19 @@ def init_db() -> None:
             uid = c.lastrowid
             for t in ["SPX", "NDX", "DJI", "VIX", "AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "META"]:
                 c.execute("INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)", (uid, t))
+
+
+def prune_old_predictions(keep_per_ticker: int = 500) -> int:
+    """Trim the predictions table — keep the newest N rows per ticker."""
+    with cursor() as c:
+        deleted = c.execute("""
+            DELETE FROM predictions
+            WHERE id IN (
+                SELECT id FROM predictions p
+                WHERE (
+                    SELECT COUNT(*) FROM predictions q
+                    WHERE q.ticker = p.ticker AND q.id > p.id
+                ) >= ?
+            )
+        """, (keep_per_ticker,)).rowcount
+    return deleted or 0

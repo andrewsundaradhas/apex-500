@@ -29,8 +29,19 @@ def _series_to_list(forecast: List[float], current: float, steps: int) -> List[f
     return [current] + list(forecast[:steps])
 
 
-def predict(series: pd.Series, horizon: str = "5d", model: str = "ensemble") -> Dict:
-    """Run a forecast. Returns the dict the frontend expects."""
+def predict(
+    series: pd.Series,
+    horizon: str = "5d",
+    model: str = "ensemble",
+    ohlcv: pd.DataFrame | None = None,
+    macro: dict | None = None,
+    sentiment: float | None = None,
+) -> Dict:
+    """Run a forecast. `series` is the close-only price series.
+
+    Optional `ohlcv` (full DataFrame with high/low/volume) + `macro` + `sentiment`
+    are forwarded to the boost model which can use them as extra features.
+    """
     steps = _horizon_steps(horizon)
     current = float(series.iloc[-1])
 
@@ -53,17 +64,20 @@ def predict(series: pd.Series, horizon: str = "5d", model: str = "ensemble") -> 
                       lower=r["lower"], upper=r["upper"])
 
     if model == "boost":
-        r = boost_forecast(series, horizon=steps)
+        boost_input = ohlcv if ohlcv is not None else series
+        r = boost_forecast(boost_input, horizon=steps, macro=macro, sentiment=sentiment)
         target = float(r["forecast"][-1])
         return _shape(r["model"], horizon, target, current, r["forecast"], r["confidence"],
                       metadata={"feature_importance": r.get("feature_importance"),
-                                "val_r2": r.get("val_r2")})
+                                "val_r2": r.get("val_r2"),
+                                "n_features": r.get("n_features")})
 
     # ---- Ensemble: all four models, confidence-weighted ----
     arima = arima_forecast(series, horizon=steps)
     lstm  = lstm_forecast(series, horizon=steps, epochs=20)
     trans = transformer_forecast(series, horizon=steps, epochs=30)
-    boost = boost_forecast(series, horizon=steps)
+    boost_input = ohlcv if ohlcv is not None else series
+    boost = boost_forecast(boost_input, horizon=steps, macro=macro, sentiment=sentiment)
     rf    = rf_direction(series, horizon=steps)
 
     models = [

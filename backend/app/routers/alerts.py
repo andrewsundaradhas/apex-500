@@ -1,25 +1,16 @@
-"""User alerts — CRUD + evaluation."""
+"""User alerts — CRUD + evaluation. JWT-aware via current_user."""
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from ..auth_deps import current_user
 from ..db.database import cursor
 from ..market import get_quote
 
 router = APIRouter(prefix="/api/alerts", tags=["alerts"])
 log = logging.getLogger("apex.alerts")
-
-DEMO_USER_EMAIL = "demo@apex500.dev"
-
-
-def _uid() -> int:
-    with cursor() as c:
-        r = c.execute("SELECT id FROM users WHERE email = ?", (DEMO_USER_EMAIL,)).fetchone()
-    if not r:
-        raise HTTPException(500, "Demo user missing")
-    return r["id"]
 
 
 class AlertIn(BaseModel):
@@ -31,23 +22,24 @@ class AlertIn(BaseModel):
 
 
 @router.get("")
-def list_alerts():
-    uid = _uid()
+def list_alerts(user: dict = Depends(current_user)):
     with cursor() as c:
-        rows = c.execute("SELECT * FROM alerts WHERE user_id = ? ORDER BY id DESC", (uid,)).fetchall()
+        rows = c.execute(
+            "SELECT * FROM alerts WHERE user_id = ? ORDER BY id DESC",
+            (user["id"],),
+        ).fetchall()
     return {"items": [dict(r) for r in rows]}
 
 
 @router.post("")
-def create_alert(payload: AlertIn):
+def create_alert(payload: AlertIn, user: dict = Depends(current_user)):
     if payload.condition_type not in ("price_above", "price_below", "pct_change", "vix_above", "prediction_change"):
         raise HTTPException(400, "Invalid condition_type")
-    uid = _uid()
     with cursor() as c:
         c.execute(
             "INSERT INTO alerts (user_id, ticker, condition_type, threshold, note, enabled)"
             " VALUES (?,?,?,?,?,?)",
-            (uid, payload.ticker.upper(), payload.condition_type, payload.threshold,
+            (user["id"], payload.ticker.upper(), payload.condition_type, payload.threshold,
              payload.note or "", int(payload.enabled)),
         )
         new_id = c.lastrowid
@@ -55,26 +47,34 @@ def create_alert(payload: AlertIn):
 
 
 @router.patch("/{alert_id}")
-def toggle_alert(alert_id: int, enabled: bool):
+def toggle_alert(alert_id: int, enabled: bool, user: dict = Depends(current_user)):
     with cursor() as c:
-        c.execute("UPDATE alerts SET enabled = ? WHERE id = ?", (int(enabled), alert_id))
+        c.execute(
+            "UPDATE alerts SET enabled = ? WHERE id = ? AND user_id = ?",
+            (int(enabled), alert_id, user["id"]),
+        )
     return {"ok": True}
 
 
 @router.delete("/{alert_id}")
-def delete_alert(alert_id: int):
+def delete_alert(alert_id: int, user: dict = Depends(current_user)):
     with cursor() as c:
-        c.execute("DELETE FROM alerts WHERE id = ?", (alert_id,))
+        c.execute(
+            "DELETE FROM alerts WHERE id = ? AND user_id = ?",
+            (alert_id, user["id"]),
+        )
     return {"ok": True}
 
 
 @router.post("/evaluate")
-def evaluate_alerts():
-    """Check every enabled alert; mark triggered ones. Returns list of currently firing."""
-    uid = _uid()
+def evaluate_alerts(user: dict = Depends(current_user)):
+    """Check every enabled alert for this user; mark triggered ones."""
     firing = []
     with cursor() as c:
-        alerts = c.execute("SELECT * FROM alerts WHERE user_id = ? AND enabled = 1", (uid,)).fetchall()
+        alerts = c.execute(
+            "SELECT * FROM alerts WHERE user_id = ? AND enabled = 1",
+            (user["id"],),
+        ).fetchall()
 
     for a in alerts:
         try:

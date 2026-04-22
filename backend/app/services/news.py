@@ -1,7 +1,7 @@
-"""News service with lexicon-based sentiment.
+"""News service with VADER sentiment (+ lexicon fallback).
 
-Real wire: yfinance ticker news (free). Sentiment: a tiny curated lexicon —
-not state-of-the-art, but deterministic and good enough to color headlines.
+Real wire: yfinance ticker news (free). Sentiment: VADER when installed,
+otherwise a compact curated lexicon — always deterministic.
 """
 from __future__ import annotations
 
@@ -26,10 +26,22 @@ NEGATIVE = {
     "cut", "cuts", "drop", "drops", "fall", "falls", "sell-off", "selloff",
 }
 
+_vader = None
 
-def score_headline(text: str) -> float:
-    if not text:
-        return 0.0
+
+def _get_vader():
+    global _vader
+    if _vader is not None:
+        return _vader
+    try:
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+        _vader = SentimentIntensityAnalyzer()
+    except Exception:
+        _vader = False  # remember it's missing so we don't retry every call
+    return _vader or None
+
+
+def _score_lexicon(text: str) -> float:
     tokens = set(re.findall(r"[a-zA-Z-]+", text.lower()))
     pos = len(tokens & POSITIVE)
     neg = len(tokens & NEGATIVE)
@@ -37,6 +49,18 @@ def score_headline(text: str) -> float:
     if total == 0:
         return 0.0
     return round((pos - neg) / total, 3)
+
+
+def score_headline(text: str) -> float:
+    if not text:
+        return 0.0
+    v = _get_vader()
+    if v is not None:
+        try:
+            return round(float(v.polarity_scores(text)["compound"]), 3)
+        except Exception:
+            pass
+    return _score_lexicon(text)
 
 
 def tone_from_score(s: float) -> str:
@@ -78,7 +102,38 @@ DEFAULT_HEADLINES = [
 
 
 def fetch_news(ticker: Optional[str] = None, limit: int = 10) -> List[Dict]:
-    """Fetch news + score sentiment. Persist to DB, return newest N."""
+    """Fetch news + score sentiment. Returns cached rows first, refreshes in-line.
+
+    When a ticker is given, prefers yfinance headlines for that ticker and only
+    falls back to defaults if the wire call returns nothing.
+    """
+    # Serve recent cached rows first if we have enough — avoids per-request network calls.
+    with cursor() as c:
+        if ticker:
+            cached = c.execute(
+                "SELECT ticker, headline, source, url, sentiment, tone, published_at, created_at "
+                "FROM news WHERE ticker = ? ORDER BY created_at DESC LIMIT ?",
+                (ticker, limit),
+            ).fetchall()
+        else:
+            cached = c.execute(
+                "SELECT ticker, headline, source, url, sentiment, tone, published_at, created_at "
+                "FROM news ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+
+    # If cached rows exist AND are fresh (<1h old) for this ticker, just return them.
+    if cached and len(cached) >= min(limit, 5):
+        freshest = cached[0]["created_at"]
+        try:
+            from datetime import datetime, timedelta, timezone
+            fresh_ts = datetime.fromisoformat(freshest.replace(" ", "T"))
+            age = datetime.now(timezone.utc).replace(tzinfo=None) - fresh_ts
+            if age < timedelta(hours=1):
+                return [dict(r) for r in cached][:limit]
+        except Exception:
+            pass
+
     headlines: List[Dict] = []
     if ticker:
         headlines = _fetch_yfinance_news(ticker)
