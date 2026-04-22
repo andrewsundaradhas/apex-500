@@ -94,6 +94,76 @@ def feature_matrix(series: pd.Series) -> tuple[pd.DataFrame, list[str]]:
     return df[FEATURE_COLUMNS], FEATURE_COLUMNS
 
 
+def build_features_ohlcv(ohlcv: pd.DataFrame) -> pd.DataFrame:
+    """Extended feature set using high/low/volume in addition to close.
+
+    Adds real ATR, OBV slope, volume z-score, close-to-high/low position.
+    Falls back cleanly if volume is missing or constant.
+    """
+    if "close" not in ohlcv.columns:
+        raise ValueError("ohlcv must contain a 'close' column")
+
+    df = build_features(ohlcv["close"]).copy()
+
+    if {"high", "low"}.issubset(ohlcv.columns):
+        hl_range = (ohlcv["high"] - ohlcv["low"]).replace(0, np.nan)
+        df["hl_range"] = (hl_range / ohlcv["close"]).fillna(0)
+        df["close_pos"] = ((ohlcv["close"] - ohlcv["low"]) / hl_range).fillna(0.5).clip(0, 1)
+
+        # True ATR — max of (H-L, |H-prev_close|, |L-prev_close|)
+        prev_close = ohlcv["close"].shift(1)
+        tr = pd.concat([
+            ohlcv["high"] - ohlcv["low"],
+            (ohlcv["high"] - prev_close).abs(),
+            (ohlcv["low"] - prev_close).abs(),
+        ], axis=1).max(axis=1)
+        df["true_atr14"] = (tr.rolling(14).mean() / ohlcv["close"]).fillna(df.get("atr14", 0))
+    else:
+        df["hl_range"] = 0.0
+        df["close_pos"] = 0.5
+        df["true_atr14"] = df.get("atr14", 0)
+
+    if "volume" in ohlcv.columns and ohlcv["volume"].std() > 0:
+        vol = ohlcv["volume"].astype(float)
+        mean20 = vol.rolling(20).mean()
+        std20 = vol.rolling(20).std().replace(0, np.nan)
+        df["vol_z"] = ((vol - mean20) / std20).fillna(0)
+
+        # OBV slope (20-bar) normalized
+        sign = np.sign(ohlcv["close"].diff()).fillna(0)
+        obv = (sign * vol).cumsum()
+        df["obv_slope"] = (obv.diff(20) / vol.rolling(20).mean().replace(0, np.nan)).fillna(0)
+    else:
+        df["vol_z"] = 0.0
+        df["obv_slope"] = 0.0
+
+    return df
+
+
+EXTENDED_FEATURE_COLUMNS = FEATURE_COLUMNS + [
+    "hl_range", "close_pos", "true_atr14", "vol_z", "obv_slope",
+]
+
+
+def feature_matrix_ohlcv(ohlcv: pd.DataFrame, macro: dict | None = None, sentiment: float | None = None) -> tuple[pd.DataFrame, list[str]]:
+    """OHLCV feature matrix + optional macro / sentiment columns.
+
+    macro is a dict like {"DGS10": 4.5, "VIXCLS": 15.2, "FEDFUNDS": 5.3} —
+    broadcast as constant columns. sentiment is a scalar [-1, 1].
+    """
+    df = build_features_ohlcv(ohlcv).dropna()
+    cols = list(EXTENDED_FEATURE_COLUMNS)
+    if macro:
+        for k, v in macro.items():
+            col = f"macro_{k.lower()}"
+            df[col] = float(v)
+            cols.append(col)
+    if sentiment is not None:
+        df["sentiment"] = float(sentiment)
+        cols.append("sentiment")
+    return df[cols], cols
+
+
 def garch_volatility_forecast(returns: pd.Series, horizon: int = 5) -> list[float]:
     """Simple GARCH(1,1) volatility forecast using arch_model — optional dep, fallback to EWMA."""
     try:

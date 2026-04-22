@@ -1,21 +1,36 @@
 """Apex 500 FastAPI app entry point."""
 import logging
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
-from .db.database import init_db
+from .db.database import init_db, prune_old_predictions
 from .routers import alerts, auth, backtest, data, insights, market, metrics, predict, system, watchlist, ws
 from .services import macro, news, sp500
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("apex")
 
-app = FastAPI(title="Apex 500 API", version="0.2.0")
+limiter = Limiter(key_func=get_remote_address, default_limits=[os.environ.get("APEX_RATE_LIMIT", "120/minute")])
 
+app = FastAPI(title="Apex 500 API", version="0.3.0")
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded", "limit": str(exc.detail)})
+
+
+cors_origins = os.environ.get("APEX_CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,7 +57,13 @@ def on_startup():
     init_db()
     log.info("DB initialized")
 
-    # Seed static datasets (cheap, cached after first run)
+    try:
+        deleted = prune_old_predictions(keep_per_ticker=500)
+        if deleted:
+            log.info("Pruned %d old predictions", deleted)
+    except Exception as e:
+        log.warning("prune failed: %s", e)
+
     try:
         n = sp500.ensure_sp500_seeded()
         log.info("sp500_constituents: %d rows", n)
@@ -61,14 +82,14 @@ def on_startup():
     except Exception as e:
         log.warning("news seeding failed: %s", e)
 
-    log.info("Apex 500 API v0.2.0 ready")
+    log.info("Apex 500 API ready")
 
 
 @app.get("/")
 def root():
     return {
         "service": "Apex 500 API",
-        "version": "0.2.0",
+        "version": app.version,
         "endpoints": {
             "health":     "/health",
             "market":     "/api/market/{quote,history,sectors}",

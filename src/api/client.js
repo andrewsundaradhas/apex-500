@@ -1,12 +1,42 @@
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const WS = API.replace(/^http/, 'ws');
 
+const TOKEN_KEY = 'apex_token';
+const USER_KEY = 'apex_user';
+
+export const auth = {
+  getToken: () => {
+    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+  },
+  getUser: () => {
+    try { const u = localStorage.getItem(USER_KEY); return u ? JSON.parse(u) : null; } catch { return null; }
+  },
+  setSession: (token, user) => {
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+      if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch {}
+  },
+  clear: () => {
+    try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); } catch {}
+  },
+  isAuthed: () => {
+    try { return Boolean(localStorage.getItem(TOKEN_KEY)); } catch { return false; }
+  },
+};
+
 async function request(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
-    ...opts,
-  });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const token = auth.getToken();
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API}${path}`, { ...opts, headers });
+  if (res.status === 401) {
+    auth.clear();
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`${res.status} ${res.statusText}${body ? ` — ${body.slice(0, 200)}` : ''}`);
+  }
   return res.json();
 }
 
@@ -58,8 +88,17 @@ export const api = {
   },
 
   // Auth
-  login:  (email, password)       => request('/api/auth/login',  { method: 'POST', body: JSON.stringify({ email, password }) }),
-  signup: (email, password, name) => request('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
+  login:  async (email, password) => {
+    const r = await request('/api/auth/login',  { method: 'POST', body: JSON.stringify({ email, password }) });
+    if (r?.token) auth.setSession(r.token, r.user);
+    return r;
+  },
+  signup: async (email, password, name) => {
+    const r = await request('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, name }) });
+    if (r?.token) auth.setSession(r.token, r.user);
+    return r;
+  },
+  logout: () => { auth.clear(); },
 
   // System
   health: () => request('/health'),

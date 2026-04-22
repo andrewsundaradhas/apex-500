@@ -129,14 +129,23 @@ def list_insights():
         "meta": "FOMC · 10yr −4bps", "signals": ["Fed minutes", "10yr move"], "time": "2h",
     })
 
-    # Pad to at least 6
-    while len(insights) < 6:
-        insights.append({
-            "tone": "ai", "category": "Momentum",
-            "title": "Model monitoring — no anomalies flagged.",
-            "body": "All 124 monitored signals within 2σ of their rolling means. Model will resurface this slot when new information arrives.",
-            "meta": "124 signals · 2σ band", "signals": ["Monitor"], "time": "just now",
-        })
-        break
+    padding = [
+        {"tone": "ai", "category": "Momentum",
+         "title": "Model monitoring — no anomalies flagged.",
+         "body": "All 124 monitored signals within 2σ of their rolling means. The model surfaces this slot when new information arrives.",
+         "meta": "124 signals · 2σ band", "signals": ["Monitor"], "time": "just now"},
+        {"tone": "ai", "category": "Breadth",
+         "title": "Advance/decline line holding above its 50-day average.",
+         "body": "Market breadth is constructive; the rally is not carried by a handful of names alone. Watch for a breadth divergence before getting defensive.",
+         "meta": "A/D · 50-day", "signals": ["Breadth", "A/D line"], "time": "12m"},
+        {"tone": "ai", "category": "Flows",
+         "title": "ETF creations positive for a fifth straight session.",
+         "body": "Primary-market creations in large-cap index ETFs are net positive, which historically correlates with short-term upside continuation.",
+         "meta": "ETF flows · 5d", "signals": ["ETF flows", "Primary"], "time": "30m"},
+    ]
+    for p in padding:
+        if len(insights) >= 6:
+            break
+        insights.append(p)
 
     return {"items": insights[:8]}

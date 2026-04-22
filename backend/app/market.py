@@ -1,17 +1,23 @@
-"""Market data service. Uses yfinance for real data with SQLite caching and mock fallback."""
+"""Market data service. yfinance → Stooq CSV → mock fallback, with in-memory TTL cache."""
 from __future__ import annotations
 
 import hashlib
+import io
 import logging
-from datetime import datetime, timedelta
+import os
+import urllib.request
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 
+from . import cache
 from .db.database import cursor
 
 log = logging.getLogger("apex.market")
+
+HISTORY_TTL_SECONDS = int(os.environ.get("APEX_HISTORY_TTL", "300"))  # 5 min
 
 # yfinance ticker aliases — the index symbols on Yahoo use ^ prefixes
 TICKER_ALIAS = {
@@ -21,8 +27,16 @@ TICKER_ALIAS = {
     "VIX": "^VIX",
 }
 
+# Stooq symbol map (US equities get the .us suffix; indices have their own symbols)
+STOOQ_ALIAS = {
+    "SPX": "^spx",
+    "NDX": "^ndx",
+    "DJI": "^dji",
+    "VIX": "^vix",
+}
+
 TIMEFRAME_DAYS = {
-    "1D":  ("1d",  "5m"),   # 1 day intraday, 5-minute bars
+    "1D":  ("1d",  "5m"),
     "1W":  ("7d",  "30m"),
     "1M":  ("1mo", "1d"),
     "1Y":  ("1y",  "1d"),
@@ -66,7 +80,6 @@ def _mock_series(ticker: str, n: int = 160, start: float = 5060.0, vol: float = 
 
 
 def _fetch_yfinance(ticker: str, period: str, interval: str) -> Optional[pd.DataFrame]:
-    """Fetch real data from Yahoo Finance. Returns None on any failure."""
     try:
         import yfinance as yf
         ysymbol = TICKER_ALIAS.get(ticker.upper(), ticker.upper())
@@ -90,28 +103,62 @@ def _fetch_yfinance(ticker: str, period: str, interval: str) -> Optional[pd.Data
         return None
 
 
+def _fetch_stooq(ticker: str, timeframe: str) -> Optional[pd.DataFrame]:
+    """Stooq CSV endpoint — free, no API key, covers US equities + major indices.
+    Timeframes map to Stooq interval codes: d (daily), w (weekly), m (monthly)."""
+    try:
+        sym = STOOQ_ALIAS.get(ticker.upper())
+        if not sym:
+            # US equities on Stooq use the .us suffix
+            sym = f"{ticker.lower()}.us"
+        interval_code = {"1D": "d", "1W": "d", "1M": "d", "1Y": "d", "5Y": "w"}.get(timeframe, "d")
+        url = f"https://stooq.com/q/d/l/?s={sym}&i={interval_code}"
+        req = urllib.request.Request(url, headers={"User-Agent": "apex-500/1.0"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            raw = resp.read().decode("utf-8")
+        df = pd.read_csv(io.StringIO(raw))
+        if df.empty or "Date" not in df.columns:
+            return None
+        df = df.rename(columns={c: c.lower() for c in df.columns})
+        out = pd.DataFrame({
+            "date":   pd.to_datetime(df["date"]),
+            "open":   df["open"].astype(float),
+            "high":   df["high"].astype(float),
+            "low":    df["low"].astype(float),
+            "close":  df["close"].astype(float),
+            "volume": df["volume"].fillna(0).astype(int) if "volume" in df.columns else 0,
+        }).dropna().tail(_bars_for_timeframe(timeframe))
+        return out.reset_index(drop=True)
+    except Exception as e:
+        log.warning("stooq failed for %s: %s", ticker, e)
+        return None
+
+
+def _bars_for_timeframe(timeframe: str) -> int:
+    return {"1D": 78, "1W": 120, "1M": 160, "1Y": 260, "5Y": 260}.get(timeframe, 160)
+
+
 def get_history(ticker: str, timeframe: str = "1M") -> pd.DataFrame:
-    """Main entry: returns historical OHLCV for a ticker. Real data first, mock fallback."""
+    """Main entry: returns historical OHLCV. yfinance → Stooq → mock."""
+    ck = f"history:{ticker.upper()}:{timeframe}"
+    hit = cache.get(ck)
+    if hit is not None:
+        return hit.copy()
+
     period, interval = TIMEFRAME_DAYS.get(timeframe, ("1mo", "1d"))
 
-    # Try cache first (1-hour freshness for daily+, 5-min for intraday)
-    cache_key = f"{ticker}:{timeframe}"
-    with cursor() as c:
-        row = c.execute(
-            "SELECT date FROM market_data WHERE ticker = ? ORDER BY date DESC LIMIT 1",
-            (cache_key,),
-        ).fetchone()
-
-    # Try yfinance
     df = _fetch_yfinance(ticker, period, interval)
-    if df is not None and not df.empty:
-        log.info("Fetched %s bars for %s (%s) from yfinance", len(df), ticker, timeframe)
-        return df
+    source = "yfinance"
+    if df is None or df.empty:
+        df = _fetch_stooq(ticker, timeframe)
+        source = "stooq"
+    if df is None or df.empty:
+        df = _mock_series(ticker, n=_bars_for_timeframe(timeframe))
+        source = "mock"
 
-    # Fallback to mock
-    log.info("Using mock data for %s (%s)", ticker, timeframe)
-    n = {"1D": 78, "1W": 120, "1M": 160, "1Y": 220, "5Y": 260}.get(timeframe, 160)
-    return _mock_series(ticker, n=n)
+    log.info("history %s (%s) via %s → %d bars", ticker, timeframe, source, len(df))
+    cache.set(ck, df.copy(), ttl_seconds=HISTORY_TTL_SECONDS)
+    return df
 
 
 def get_quote(ticker: str) -> Dict[str, float]:
@@ -151,7 +198,6 @@ def get_sectors() -> List[Dict]:
             q = get_quote(sym)
             out.append({"symbol": sym, "name": name, "change": round(q["change_pct"], 2)})
         except Exception:
-            # Deterministic mock
             seed = int(hashlib.md5(sym.encode()).hexdigest()[:8], 16) % 1000
             rng = np.random.default_rng(seed)
             out.append({"symbol": sym, "name": name, "change": round((rng.random() - 0.5) * 4, 2)})

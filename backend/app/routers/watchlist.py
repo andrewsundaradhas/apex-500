@@ -1,23 +1,18 @@
-"""Watchlist endpoints — uses demo user until real auth is wired per request."""
-from fastapi import APIRouter, HTTPException
+"""Watchlist endpoints — JWT-aware.
+
+`current_user` dependency decodes the Bearer token when present and falls back
+to the demo user otherwise, so the UI still works without a login during dev
+while real tokens get properly scoped reads/writes.
+"""
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from ..auth_deps import current_user
 from ..db.database import cursor
-from ..market import get_quote
+from ..market import get_history, get_quote
 from ..ml.classical import rf_direction
-from ..market import get_history
 
 router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
-
-DEMO_USER_EMAIL = "demo@apex500.dev"
-
-
-def _demo_user_id() -> int:
-    with cursor() as c:
-        row = c.execute("SELECT id FROM users WHERE email = ?", (DEMO_USER_EMAIL,)).fetchone()
-    if row is None:
-        raise HTTPException(500, "Demo user missing — was DB initialized?")
-    return row["id"]
 
 
 class AddTickerIn(BaseModel):
@@ -37,10 +32,12 @@ MARKET_CAPS = {
 
 
 @router.get("")
-def list_watchlist():
-    uid = _demo_user_id()
+def list_watchlist(user: dict = Depends(current_user)):
     with cursor() as c:
-        rows = c.execute("SELECT ticker FROM watchlist WHERE user_id = ? ORDER BY id", (uid,)).fetchall()
+        rows = c.execute(
+            "SELECT ticker FROM watchlist WHERE user_id = ? ORDER BY id",
+            (user["id"],),
+        ).fetchall()
 
     items = []
     for r in rows:
@@ -61,7 +58,7 @@ def list_watchlist():
             "up": q.get("change_pct", 0) >= 0,
             "vol": round(q.get("volume", 0) / 1_000_000, 1) if q.get("volume") else 2.0,
             "marketCap": MARKET_CAPS.get(tk, 0),
-            "pred5d": round((rf["probability_up"] - 0.5) * 4, 2),  # rough mapping
+            "pred5d": round((rf["probability_up"] - 0.5) * 4, 2),
             "signal": rf["signal"],
             "starred": True,
             "active": tk == "SPX",
@@ -71,19 +68,23 @@ def list_watchlist():
 
 
 @router.post("")
-def add_ticker(payload: AddTickerIn):
+def add_ticker(payload: AddTickerIn, user: dict = Depends(current_user)):
     tk = payload.ticker.upper().strip()
     if not tk:
         raise HTTPException(400, "Empty ticker")
-    uid = _demo_user_id()
     with cursor() as c:
-        c.execute("INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)", (uid, tk))
+        c.execute(
+            "INSERT OR IGNORE INTO watchlist (user_id, ticker) VALUES (?, ?)",
+            (user["id"], tk),
+        )
     return {"ok": True, "ticker": tk}
 
 
 @router.delete("/{ticker}")
-def remove_ticker(ticker: str):
-    uid = _demo_user_id()
+def remove_ticker(ticker: str, user: dict = Depends(current_user)):
     with cursor() as c:
-        c.execute("DELETE FROM watchlist WHERE user_id = ? AND ticker = ?", (uid, ticker.upper()))
+        c.execute(
+            "DELETE FROM watchlist WHERE user_id = ? AND ticker = ?",
+            (user["id"], ticker.upper()),
+        )
     return {"ok": True}
