@@ -1,4 +1,4 @@
-"""Market data service. yfinance → Stooq CSV → mock fallback, with in-memory TTL cache."""
+"""Market data service. Finnhub → yfinance → Stooq CSV → mock fallback, with in-memory TTL cache."""
 from __future__ import annotations
 
 import hashlib
@@ -18,6 +18,7 @@ from .db.database import cursor
 log = logging.getLogger("apex.market")
 
 HISTORY_TTL_SECONDS = int(os.environ.get("APEX_HISTORY_TTL", "300"))  # 5 min
+FINNHUB_KEY = os.environ.get("APEX_FINNHUB_KEY", "").strip()
 
 # yfinance ticker aliases — the index symbols on Yahoo use ^ prefixes
 TICKER_ALIAS = {
@@ -103,6 +104,61 @@ def _fetch_yfinance(ticker: str, period: str, interval: str) -> Optional[pd.Data
         return None
 
 
+def _finnhub_symbol(ticker: str) -> str:
+    # Finnhub uses standard symbols (e.g. SPY, AAPL). Indices require special
+    # prefixes; we handle a few common ones.
+    t = ticker.upper()
+    if t == "SPX":
+        return "OANDA:SPX500_USD"
+    if t == "NDX":
+        return "NDX"
+    if t == "DJI":
+        return "DJI"
+    if t == "VIX":
+        return "VIX"
+    return t
+
+
+def _fetch_finnhub(ticker: str, timeframe: str) -> Optional[pd.DataFrame]:
+    """Finnhub candles endpoint. Requires `APEX_FINNHUB_KEY`."""
+    if not FINNHUB_KEY:
+        return None
+    try:
+        import httpx
+
+        symbol = _finnhub_symbol(ticker)
+        # Map our timeframe to Finnhub resolution + lookback window.
+        now = int(datetime.utcnow().timestamp())
+        days_back = {"1D": 7, "1W": 30, "1M": 120, "1Y": 400, "5Y": 2200}.get(timeframe, 120)
+        frm = now - days_back * 86400
+        resolution = {"1D": "5", "1W": "15", "1M": "60", "1Y": "D", "5Y": "W"}.get(timeframe, "60")
+
+        url = "https://finnhub.io/api/v1/stock/candle"
+        params = {"symbol": symbol, "resolution": resolution, "from": frm, "to": now, "token": FINNHUB_KEY}
+        with httpx.Client(timeout=6.0) as client:
+            r = client.get(url, params=params)
+            r.raise_for_status()
+            payload = r.json()
+        if payload.get("s") != "ok":
+            return None
+        t = payload.get("t") or []
+        if not t:
+            return None
+        df = pd.DataFrame({
+            "date": pd.to_datetime(payload["t"], unit="s"),
+            "open": payload["o"],
+            "high": payload["h"],
+            "low": payload["l"],
+            "close": payload["c"],
+            "volume": payload.get("v") or [0] * len(payload["t"]),
+        })
+        df = df.dropna()
+        return df.tail(_bars_for_timeframe(timeframe)).reset_index(drop=True)
+    except Exception as e:
+        log.warning("finnhub failed for %s: %s", ticker, e)
+        return None
+
+
 def _fetch_stooq(ticker: str, timeframe: str) -> Optional[pd.DataFrame]:
     """Stooq CSV endpoint — free, no API key, covers US equities + major indices.
     Timeframes map to Stooq interval codes: d (daily), w (weekly), m (monthly)."""
@@ -139,7 +195,7 @@ def _bars_for_timeframe(timeframe: str) -> int:
 
 
 def get_history(ticker: str, timeframe: str = "1M") -> pd.DataFrame:
-    """Main entry: returns historical OHLCV. yfinance → Stooq → mock."""
+    """Main entry: returns historical OHLCV. Finnhub → yfinance → Stooq → mock."""
     ck = f"history:{ticker.upper()}:{timeframe}"
     hit = cache.get(ck)
     if hit is not None:
@@ -147,8 +203,11 @@ def get_history(ticker: str, timeframe: str = "1M") -> pd.DataFrame:
 
     period, interval = TIMEFRAME_DAYS.get(timeframe, ("1mo", "1d"))
 
-    df = _fetch_yfinance(ticker, period, interval)
-    source = "yfinance"
+    df = _fetch_finnhub(ticker, timeframe)
+    source = "finnhub"
+    if df is None or df.empty:
+        df = _fetch_yfinance(ticker, period, interval)
+        source = "yfinance"
     if df is None or df.empty:
         df = _fetch_stooq(ticker, timeframe)
         source = "stooq"

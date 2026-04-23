@@ -12,6 +12,7 @@ from slowapi.util import get_remote_address
 from .db.database import init_db, prune_old_predictions
 from .routers import alerts, auth, backtest, data, insights, market, metrics, predict, system, watchlist, ws
 from .services import macro, news, sp500
+from .scheduler import build_scheduler, refresh_hot_predictions
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("apex")
@@ -28,6 +29,9 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 
 
 cors_origins = os.environ.get("APEX_CORS_ORIGINS", "*").split(",")
+env = os.environ.get("APEX_ENV", "development").lower()
+if env == "production" and "*" in [o.strip() for o in cors_origins]:
+    log.warning("APEX_CORS_ORIGINS is '*' in production — tighten this for a public deploy.")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -50,6 +54,8 @@ app.include_router(metrics.router)
 app.include_router(alerts.router)
 app.include_router(data.router)
 app.include_router(ws.router)
+
+scheduler = build_scheduler()
 
 
 @app.on_event("startup")
@@ -82,7 +88,24 @@ def on_startup():
     except Exception as e:
         log.warning("news seeding failed: %s", e)
 
+    try:
+        scheduler.start()
+        log.info("scheduler started")
+        # Warm once at boot so the first user doesn't pay the cold-start cost.
+        refresh_hot_predictions()
+    except Exception as e:
+        log.warning("scheduler start failed: %s", e)
+
     log.info("Apex 500 API ready")
+
+
+@app.on_event("shutdown")
+def on_shutdown():
+    try:
+        if scheduler.running:
+            scheduler.shutdown(wait=False)
+    except Exception:
+        pass
 
 
 @app.get("/")

@@ -1,11 +1,13 @@
 """FRED macro indicators.
 
-Uses St Louis Fed's FRED CSV endpoint (no API key needed). Falls back to mock
-when the network is unavailable.
+Uses FRED. Prefers the official API when `APEX_FRED_API_KEY` is set; otherwise
+falls back to the public fredgraph CSV endpoint. Falls back to mock when the
+network is unavailable.
 """
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from io import StringIO
 from typing import Dict, List
@@ -16,6 +18,7 @@ import pandas as pd
 from ..db.database import cursor
 
 log = logging.getLogger("apex.services.macro")
+FRED_API_KEY = os.environ.get("APEX_FRED_API_KEY", "").strip()
 
 # Headline indicators that drive the what-if panel + insights
 SERIES = {
@@ -52,23 +55,47 @@ def fetch_series(series_id: str, limit: int = 240) -> List[Dict]:
     """Fetch a FRED series, cache in SQLite, return newest N rows."""
     # Try network first
     try:
-        import urllib.request
-        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        with urllib.request.urlopen(url, timeout=8) as resp:
-            raw = resp.read().decode("utf-8")
-        df = pd.read_csv(StringIO(raw))
-        df.columns = [c.lower() for c in df.columns]
-        df = df.rename(columns={df.columns[0]: "date", df.columns[1]: "value"})
-        df["value"] = pd.to_numeric(df["value"], errors="coerce")
-        df = df.dropna().tail(limit)
-        rows = [{"date": str(d.date() if hasattr(d, "date") else d), "value": float(v)}
-                for d, v in zip(pd.to_datetime(df["date"]), df["value"])]
+        if FRED_API_KEY:
+            import httpx
+
+            url = "https://api.stlouisfed.org/fred/series/observations"
+            params = {
+                "series_id": series_id,
+                "api_key": FRED_API_KEY,
+                "file_type": "json",
+                "sort_order": "asc",
+            }
+            with httpx.Client(timeout=8.0) as client:
+                r = client.get(url, params=params)
+                r.raise_for_status()
+                data = r.json()
+            obs = data.get("observations") or []
+            df = pd.DataFrame(obs)
+            if df.empty or "date" not in df.columns or "value" not in df.columns:
+                raise RuntimeError("empty FRED response")
+            df["value"] = pd.to_numeric(df["value"], errors="coerce")
+            df = df.dropna(subset=["value"]).tail(limit)
+            rows = [{"date": str(d), "value": float(v)} for d, v in zip(df["date"], df["value"])]
+        else:
+            import urllib.request
+
+            url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+            with urllib.request.urlopen(url, timeout=8) as resp:
+                raw = resp.read().decode("utf-8")
+            df = pd.read_csv(StringIO(raw))
+            df.columns = [c.lower() for c in df.columns]
+            df = df.rename(columns={df.columns[0]: "date", df.columns[1]: "value"})
+            df["value"] = pd.to_numeric(df["value"], errors="coerce")
+            df = df.dropna().tail(limit)
+            rows = [{"date": str(d.date() if hasattr(d, "date") else d), "value": float(v)}
+                    for d, v in zip(pd.to_datetime(df["date"]), df["value"])]
         # Persist
         with cursor() as c:
             for r in rows:
                 c.execute("INSERT OR REPLACE INTO macro_indicators (series_id, date, value) VALUES (?,?,?)",
                           (series_id, r["date"], r["value"]))
-        log.info("Fetched %d rows for %s from FRED", len(rows), series_id)
+        src = "fred_api" if FRED_API_KEY else "fredgraph_csv"
+        log.info("Fetched %d rows for %s from FRED (%s)", len(rows), series_id, src)
         return rows
     except Exception as e:
         log.warning("FRED fetch failed for %s: %s — using cache/fallback", series_id, e)

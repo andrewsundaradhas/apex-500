@@ -3,7 +3,22 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "apex.db"
+import os
+
+
+def _resolve_db_path() -> Path:
+    # Allow Fly.io or other deployments to mount a persistent volume and point
+    # the DB there (e.g. /data/apex.db). Defaults keep local dev unchanged.
+    explicit = os.environ.get("APEX_DB_PATH", "").strip()
+    if explicit:
+        return Path(explicit)
+    data_dir = os.environ.get("APEX_DATA_DIR", "").strip()
+    if data_dir:
+        return Path(data_dir) / "apex.db"
+    return Path(__file__).resolve().parent.parent.parent / "data" / "apex.db"
+
+
+DB_PATH = _resolve_db_path()
 DB_PATH.parent.mkdir(exist_ok=True)
 
 
@@ -151,7 +166,33 @@ def init_db() -> None:
     with cursor() as c:
         c.execute("INSERT OR IGNORE INTO schema_version (version) VALUES (1)")
 
+    _ensure_prediction_accuracy_columns()
     _seed_demo_user()
+
+
+def _column_names(table: str) -> set[str]:
+    with cursor() as c:
+        cols = c.execute(f"PRAGMA table_info({table})").fetchall()
+    return {str(r["name"]) for r in cols}
+
+
+def _ensure_prediction_accuracy_columns() -> None:
+    """Lightweight schema evolution without a full migration framework."""
+    cols = _column_names("predictions")
+    alters: list[str] = []
+    if "actual" not in cols:
+        alters.append("ALTER TABLE predictions ADD COLUMN actual REAL")
+    if "actual_delta_pct" not in cols:
+        alters.append("ALTER TABLE predictions ADD COLUMN actual_delta_pct REAL")
+    if "error_pct" not in cols:
+        alters.append("ALTER TABLE predictions ADD COLUMN error_pct REAL")
+    if "resolved_at" not in cols:
+        alters.append("ALTER TABLE predictions ADD COLUMN resolved_at TEXT")
+    if not alters:
+        return
+    with cursor() as c:
+        for sql in alters:
+            c.execute(sql)
 
 
 def _seed_demo_user() -> None:

@@ -3,12 +3,23 @@ models (RF, GB) and their scalers benefit from disk caching. Keyed by (ticker, m
 from __future__ import annotations
 
 import hashlib
+import os
 import pickle
 import time
 from pathlib import Path
 from typing import Any, Optional
 
-CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "models_cache"
+def _resolve_cache_dir() -> Path:
+    explicit = os.environ.get("APEX_MODELS_DIR", "").strip()
+    if explicit:
+        return Path(explicit)
+    data_dir = os.environ.get("APEX_DATA_DIR", "").strip()
+    if data_dir:
+        return Path(data_dir) / "models_cache"
+    return Path(__file__).resolve().parent.parent.parent / "models_cache"
+
+
+CACHE_DIR = _resolve_cache_dir()
 CACHE_DIR.mkdir(exist_ok=True)
 DEFAULT_TTL_SECONDS = 3600 * 6  # 6 hours
 

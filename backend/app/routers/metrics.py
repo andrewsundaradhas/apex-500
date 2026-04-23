@@ -58,3 +58,69 @@ def prediction_history(ticker: str | None = None, limit: int = 40):
         else:
             rows = c.execute("SELECT * FROM predictions ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
     return {"items": [dict(r) for r in rows]}
+
+
+@router.get("/accuracy")
+def accuracy(
+    ticker: str | None = None,
+    model: str | None = None,
+    days: int = Query(30, ge=1, le=365),
+    limit: int = Query(2000, ge=1, le=5000),
+):
+    """Rolling realized accuracy for predictions that have been resolved."""
+    where = ["resolved_at IS NOT NULL", "actual IS NOT NULL"]
+    params: list = []
+    if ticker:
+        where.append("ticker = ?")
+        params.append(ticker.upper())
+    if model:
+        where.append("LOWER(model) = ?")
+        params.append(model.lower())
+    where.append("created_at >= datetime('now', ?)")
+    params.append(f"-{int(days)} day")
+
+    sql = f"""
+        SELECT id, ticker, horizon, model, target, delta_pct, actual, actual_delta_pct, error_pct, created_at, resolved_at
+        FROM predictions
+        WHERE {' AND '.join(where)}
+        ORDER BY created_at DESC
+        LIMIT ?
+    """
+    params.append(int(limit))
+
+    with cursor() as c:
+        rows = c.execute(sql, tuple(params)).fetchall()
+
+    items = [dict(r) for r in rows]
+    if not items:
+        return {"items": [], "summary": {"n": 0}}
+
+    # Summary stats computed in Python (SQLite portability).
+    import math
+
+    def _sgn(x: float) -> int:
+        return 1 if x > 0 else (-1 if x < 0 else 0)
+
+    abs_err = [abs(float(i.get("error_pct") or 0.0)) for i in items]
+    mae = sum(abs_err) / len(abs_err) if abs_err else 0.0
+
+    hits = 0
+    hit_n = 0
+    for i in items:
+        if i.get("actual_delta_pct") is None or i.get("delta_pct") is None:
+            continue
+        hit_n += 1
+        hits += 1 if _sgn(float(i["actual_delta_pct"])) == _sgn(float(i["delta_pct"])) else 0
+    hit_rate = hits / hit_n if hit_n else None
+
+    rmse = math.sqrt(sum((float(i.get("error_pct") or 0.0) ** 2) for i in items) / len(items)) if items else 0.0
+
+    return {
+        "items": items,
+        "summary": {
+            "n": len(items),
+            "mae_error_pct": round(mae, 4),
+            "rmse_error_pct": round(rmse, 4),
+            "directional_hit_rate": round(hit_rate, 4) if hit_rate is not None else None,
+        },
+    }
