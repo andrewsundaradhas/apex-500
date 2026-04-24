@@ -13,8 +13,11 @@ from .db.database import init_db, prune_old_predictions
 from .routers import alerts, auth, backtest, data, insights, market, metrics, predict, system, watchlist, ws
 from .services import macro, news, sp500
 from .scheduler import build_scheduler, refresh_hot_predictions
+from .logging_config import setup_logging, log_system_info
+from .monitoring import monitor, monitor_performance
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# Setup enhanced logging
+setup_logging()
 log = logging.getLogger("apex")
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[os.environ.get("APEX_RATE_LIMIT", "120/minute")])
@@ -59,7 +62,10 @@ scheduler = build_scheduler()
 
 
 @app.on_event("startup")
+@monitor_performance
 def on_startup():
+    log_system_info()
+    
     init_db()
     log.info("DB initialized")
 
@@ -83,6 +89,7 @@ def on_startup():
         log.warning("macro seeding failed: %s", e)
 
     try:
+        from .services import news
         news.fetch_news(limit=12)
         log.info("news seeded")
     except Exception as e:
@@ -96,7 +103,7 @@ def on_startup():
     except Exception as e:
         log.warning("scheduler start failed: %s", e)
 
-    log.info("Apex 500 API ready")
+    log.info("Apex 500 API ready with enhanced monitoring")
 
 
 @app.on_event("shutdown")
@@ -115,6 +122,7 @@ def root():
         "version": app.version,
         "endpoints": {
             "health":     "/health",
+            "monitoring": "/monitoring",
             "market":     "/api/market/{quote,history,sectors}",
             "predict":    "/api/predict/{ticker}?horizon=1d|5d|1m&model=arima|lstm|transformer|boost|ensemble",
             "backtest":   "/api/backtest/{ticker}?model=&horizon=&max_folds=",
@@ -128,4 +136,22 @@ def root():
             "ws":         "/ws/quotes (WebSocket)",
             "docs":       "/docs",
         },
+    }
+
+@app.get("/health")
+@monitor_performance
+def health_check():
+    """Enhanced health check endpoint."""
+    return monitor.health_check()
+
+@app.get("/monitoring")
+@monitor_performance
+def monitoring_dashboard():
+    """Detailed monitoring metrics."""
+    from datetime import datetime
+    return {
+        "system": monitor.get_system_metrics(),
+        "database": monitor.get_database_metrics(),
+        "api": monitor.get_api_metrics(),
+        "timestamp": datetime.utcnow().isoformat()
     }

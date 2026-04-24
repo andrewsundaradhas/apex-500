@@ -125,7 +125,11 @@ def _fetch_finnhub(ticker: str, timeframe: str) -> Optional[pd.DataFrame]:
         return None
     try:
         import httpx
+        import time
+        from .monitoring import monitor
+        from .logging_config import log_api_usage
 
+        start_time = time.time()
         symbol = _finnhub_symbol(ticker)
         # Map our timeframe to Finnhub resolution + lookback window.
         now = int(datetime.utcnow().timestamp())
@@ -139,11 +143,22 @@ def _fetch_finnhub(ticker: str, timeframe: str) -> Optional[pd.DataFrame]:
             r = client.get(url, params=params)
             r.raise_for_status()
             payload = r.json()
+        
+        response_time = time.time() - start_time
+        
         if payload.get("s") != "ok":
+            log.warning("finnhub bad response for %s: %s", ticker, payload)
+            monitor.record_api_call("finnhub", success=False)
+            log_api_usage("finnhub", ticker, False, response_time)
             return None
+            
         t = payload.get("t") or []
         if not t:
+            log.warning("finnhub empty data for %s", ticker)
+            monitor.record_api_call("finnhub", success=False)
+            log_api_usage("finnhub", ticker, False, response_time)
             return None
+            
         df = pd.DataFrame({
             "date": pd.to_datetime(payload["t"], unit="s"),
             "open": payload["o"],
@@ -153,9 +168,19 @@ def _fetch_finnhub(ticker: str, timeframe: str) -> Optional[pd.DataFrame]:
             "volume": payload.get("v") or [0] * len(payload["t"]),
         })
         df = df.dropna()
+        
+        # Record successful API call
+        monitor.record_api_call("finnhub", success=True)
+        log_api_usage("finnhub", ticker, True, response_time)
+        log.info("finnhub success: %s (%s) %d bars in %.2fs", ticker, timeframe, len(df), response_time)
+        
         return df.tail(_bars_for_timeframe(timeframe)).reset_index(drop=True)
     except Exception as e:
         log.warning("finnhub failed for %s: %s", ticker, e)
+        from .monitoring import monitor
+        from .logging_config import log_api_usage
+        monitor.record_api_call("finnhub", success=False)
+        log_api_usage("finnhub", ticker, False)
         return None
 
 
