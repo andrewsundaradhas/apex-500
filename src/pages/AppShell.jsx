@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar.jsx';
 import TopBar from '../components/TopBar.jsx';
 import CommandPalette from '../components/CommandPalette.jsx';
 import LiveTape from '../components/LiveTape.jsx';
+import Disclaimer from '../components/Disclaimer.jsx';
 
 export default function AppShell({ children }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -30,6 +31,7 @@ export default function AppShell({ children }) {
         <main style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           {children}
         </main>
+        <Disclaimer />
       </div>
       {palette && <CommandPalette onClose={() => setPalette(false)} />}
     </div>

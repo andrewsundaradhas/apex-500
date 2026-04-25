@@ -145,11 +145,57 @@ def resolve_prediction_accuracy(days_back: int = 14) -> int:
     return updated
 
 
+def evaluate_alerts_for_all_users() -> int:
+    """Check every enabled alert and email the user when one fires."""
+    from .market import get_quote
+    from .services.email import send_email
+
+    fired = 0
+    with cursor() as c:
+        rows = c.execute("""
+            SELECT a.id, a.user_id, a.ticker, a.condition_type, a.threshold, a.note,
+                   u.email
+            FROM alerts a JOIN users u ON u.id = a.user_id
+            WHERE a.enabled = 1
+              AND (a.triggered_at IS NULL OR a.triggered_at < datetime('now', '-1 hour'))
+        """).fetchall()
+
+    for r in rows:
+        try:
+            q = get_quote(r["ticker"])
+            price = q["price"]
+            chg = q["change_pct"]
+            ct = r["condition_type"]
+            th = r["threshold"]
+            triggered = (
+                (ct == "price_above" and price >= th) or
+                (ct == "price_below" and price <= th) or
+                (ct == "pct_change" and abs(chg) >= th) or
+                (ct == "vix_above" and r["ticker"] == "VIX" and price >= th)
+            )
+            if not triggered:
+                continue
+            ok = send_email(
+                to=r["email"],
+                subject=f"Apex alert: {r['ticker']} {ct.replace('_', ' ')} {th}",
+                body=f"{r['ticker']} is now {price:.2f} ({chg:+.2f}%).\n\nNote: {r['note'] or '—'}",
+            )
+            if ok:
+                with cursor() as c:
+                    c.execute("UPDATE alerts SET triggered_at = CURRENT_TIMESTAMP WHERE id = ?", (r["id"],))
+                fired += 1
+        except Exception as e:
+            log.warning("alert eval failed for id=%s: %s", r["id"], e)
+    return fired
+
+
 def build_scheduler() -> AsyncIOScheduler:
     s = AsyncIOScheduler(timezone="UTC")
     s.add_job(refresh_hot_predictions, IntervalTrigger(minutes=15), id="warm_predictions", coalesce=True, max_instances=1)
     # Run nightly after US market close (~21:00 UTC, varies with DST; good-enough baseline).
     s.add_job(lambda: resolve_prediction_accuracy(days_back=45), CronTrigger(hour=21, minute=0), id="resolve_accuracy",
               coalesce=True, max_instances=1)
+    s.add_job(evaluate_alerts_for_all_users, IntervalTrigger(minutes=5),
+              id="alert_emails", coalesce=True, max_instances=1)
     return s
 

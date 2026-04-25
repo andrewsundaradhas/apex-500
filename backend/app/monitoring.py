@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from functools import wraps
 
 import psutil
-from ..db.database import cursor
+from .db.database import cursor
 
 log = logging.getLogger("apex.monitoring")
 

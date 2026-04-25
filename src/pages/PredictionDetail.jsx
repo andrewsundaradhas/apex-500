@@ -11,6 +11,7 @@ export default function PredictionDetail() {
   const [ticker, horizonKey] = (id || 'spx-5d').split('-');
   const [data, setData] = useState(null);
   const [quote, setQuote] = useState(null);
+  const [accuracy, setAccuracy] = useState(null);
 
   useEffect(() => {
     const h = horizonKey === '1d' ? '1d' : horizonKey === '1m' ? '1m' : '5d';
@@ -18,6 +19,12 @@ export default function PredictionDetail() {
     api.predict(t, h, 'ensemble').then(setData).catch(() => {});
     api.quote(t).then(setQuote).catch(() => {});
   }, [ticker, horizonKey]);
+
+  useEffect(() => {
+    api.metrics.accuracy(ticker.toUpperCase(), 'ensemble', 30)
+      .then(r => setAccuracy(r.summary))
+      .catch(() => {});
+  }, [ticker]);
 
   const current = quote?.price ?? data?.series?.[0] ?? 5218.47;
   const target = data?.target || 5264.10;
@@ -54,6 +61,12 @@ export default function PredictionDetail() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 32, fontWeight: 600, color: 'var(--fg-primary)', letterSpacing: '0.02em' }}>{ticker.toUpperCase()}</span>
             <Pill tone="ai" dot glow>AI · Ensemble</Pill>
             <Pill tone={delta >= 0 ? 'pos' : 'neg'} dot>{horizonKey.toUpperCase()} forecast</Pill>
+            {accuracy && accuracy.n > 0 && (
+              <Pill tone={accuracy.directional_hit_rate >= 0.55 ? 'pos' : 'warn'} dot>
+                Last 30d · {(accuracy.directional_hit_rate * 100).toFixed(0)}% directional ·
+                {' '}MAE {accuracy.mae_error_pct.toFixed(2)}%
+              </Pill>
+            )}
           </div>
           <h1 style={{ fontSize: 48, fontWeight: 500, fontFamily: 'var(--font-mono)', color: 'var(--fg-primary)', margin: 0, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
             {target.toFixed(2)}

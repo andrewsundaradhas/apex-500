@@ -77,6 +77,8 @@ export const api = {
     models:     (ticker)  => request(`/api/metrics/models${ticker ? `?ticker=${ticker}` : ''}`),
     predictions: (ticker, limit = 40) =>
       request(`/api/metrics/predictions?limit=${limit}${ticker ? `&ticker=${ticker}` : ''}`),
+    accuracy: (ticker, model = 'ensemble', days = 30) =>
+      request(`/api/metrics/accuracy?ticker=${ticker}&model=${model}&days=${days}`),
   },
 
   // Reference data
